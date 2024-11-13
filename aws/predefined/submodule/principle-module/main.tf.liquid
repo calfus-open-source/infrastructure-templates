@@ -13,14 +13,14 @@ data "aws_route53_zone" "route53_zone" {
 }
 
 module "vpc" {
-    source = "./modules/vpc"
+    source = "../../../modules/vpc"
     name = "${ var.project_name }-${ var.environment }-vpc"
     environment = "${ var.environment }"
     cidr = "${ var.vpc_cidr }"
 }
 
 module "rds"{
-    source = "./modules/rds"  
+    source = "../../../modules/rds"  
     name = "${ var.project_name }"
     environment = "${ var.environment }"
     region                 = var.region
@@ -33,7 +33,7 @@ module "rds"{
 
 {% comment %}EKS Fargate and Nodegroup If condition {% endcomment %}
 module "eks" {
-    source                  = "./modules/eks-fargate"
+    source                  = "../../../modules/eks-fargate"
     name                    = "${ var.project_name }"
     environment             = "${ var.environment }"
     vpc_id                  = module.vpc.id
@@ -42,7 +42,7 @@ module "eks" {
 }
 
 module "eks" {
-    source                  = "./modules/eks-nodegroup"
+    source                  = "../../../modules/eks-nodegroup"
     name                    = "${ var.project_name }"
     environment             = "${ var.environment }"
     vpc_id                  = module.vpc.id
@@ -51,7 +51,7 @@ module "eks" {
 }
 
 module "acm" {
-    source = "./modules/acm"
+    source = "../../../modules/acm"
     name = "${ var.project_name }"
     environment = "${ var.environment }"
     domain_name = var.domain_name
@@ -60,7 +60,7 @@ module "acm" {
 
 {% if source_code_repository == 'github' %}
 module "gitops" {
-    source = "./modules/gitops"
+    source = "../../../modules/gitops"
     name = "${ var.project_name }"
     environment = "${ var.environment }"
     github_token = "${ var.github_access_token }"
@@ -68,7 +68,7 @@ module "gitops" {
 }
 
 module "repository" {
-     source = "./modules/code-repository"
+     source = "../../../modules/code-repository"
      name = "${ var.project_name }"
      appType = "${ var.appType }"
      environment = "${ var.environment }"
@@ -82,7 +82,7 @@ data "aws_eks_cluster_auth" "eks_cluster_auth" {
 }
 
 module "ingress-controller" {
-    source                 = "./modules/ingress-controller"
+    source                 = "../../../modules/ingress-controller"
     name                   = "${ var.project_name }"
     environment            = "${ var.environment }"
     region                 = "${ var.region }"
@@ -99,7 +99,7 @@ module "ingress-controller" {
 }
 
 module "environment" {
-  source                             = "./modules/environment"
+  source                             = "../../../modules/environment"
   name                               = "${ var.project_name }"
   environment                        = "${ var.environment }"
   region                             = "${ var.region }"
@@ -115,7 +115,7 @@ module "environment" {
 
 
 module "argo" {
-    source = "./modules/argocd"
+    source = "../../../modules/argocd"
     name                               = "${ var.project_name }"
     environment                        = "${ var.environment }"
     region                             = "${ var.region }"
@@ -143,7 +143,7 @@ locals {
 
 
  module "ecr-repo" {
-    source            = "./modules/ecr"
+    source            = "../../../modules/ecr"
     image_tag_mutability   = "MUTABLE"
     count = length(local.repositories)
     name = "${ var.project_name }"
