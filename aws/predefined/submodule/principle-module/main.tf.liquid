@@ -19,6 +19,7 @@ module "vpc" {
     cidr = "${ var.vpc_cidr }"
 }
 
+{% if %}
 module "rds"{
     source = "../../../modules/rds"  
     name = "${ var.project_name }"
@@ -30,8 +31,10 @@ module "rds"{
     vpc_database_subnets   = module.vpc.database_subnets
     security_group_id      = module.vpc.default_security_group_id
 }
+{% endif %}
 
 {% comment %}EKS Fargate and Nodegroup If condition {% endcomment %}
+{% if %}
 module "eks" {
     source                  = "../../../modules/eks-fargate"
     name                    = "${ var.project_name }"
@@ -49,6 +52,7 @@ module "eks" {
     vpc_private_subnets     = module.vpc.private_subnets
     cluster_version         = "${ var.cluster_version }"
 }
+{% endif %}
 
 module "acm" {
     source = "../../../modules/acm"
@@ -142,6 +146,7 @@ locals {
  }
 
 
+{% if %}
  module "ecr-repo" {
     source            = "../../../modules/ecr"
     image_tag_mutability   = "MUTABLE"
@@ -149,3 +154,4 @@ locals {
     name = "${ var.project_name }"
     appType = local.repositories[count.index].appType
 }
+{% endif %}
