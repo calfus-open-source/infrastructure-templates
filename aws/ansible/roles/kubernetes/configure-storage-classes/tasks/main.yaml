@@ -1,12 +1,12 @@
-- name: storage-class template
+---
+- hosts: k8s_master
+  gather_facts: yes
   become: yes
-  become_user: kube
-  template: src=./templates/storage-class.j2 dest=$HOME/storage-class.yaml
-
-- name: Install Kubernetes Dashboard and Metrics Server
+  roles:
+    - { role:  ../roles/kubernetes/configure-kubernetes-cluster, tags: 'configure-kubernetes-cluster' }
+ 
+- hosts: k8s_master
+  gather_facts: yes
   become: yes
-  become_user: kube
-  shell: |
-    kubectl apply -f $HOME/storage-class.yaml
-  args:
-    chdir: $HOME
+  roles:
+    - { role:  ../roles/kubernetes/configure-storage-classes, tags: 'configure-storage-classes' }
