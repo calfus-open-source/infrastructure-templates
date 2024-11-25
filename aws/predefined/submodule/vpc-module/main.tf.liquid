@@ -1,5 +1,5 @@
 provider "aws" {
-    region     = "{{ aws_region}}"
+    region     = "ap-south-1"
 }
 
 terraform {
@@ -9,7 +9,8 @@ terraform {
 
 module "vpc" {
   source      = "./modules/vpc"
-  name        = "${var.project_name}-${var.environment}-vpc"
+  name        = "${var.project_name}-${var.environment}-${var.moduleName}-vpc"
   environment = var.environment
-  cidr        = var.cidr 
+  cidr        = var.cidr
+
 }
