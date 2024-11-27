@@ -9,7 +9,7 @@ terraform {
 
 module "vpc" {
   
-  for_each   = toset(var.moduleNames) # Creates one module instance per moduleName
+  for_each   = toset([var.moduleNames]) # Creates one module instance per moduleName
   source      = "./modules/vpc"
   name        = "${var.project_name}-${var.environment}-${each.value}-vpc"
   environment = var.environment
