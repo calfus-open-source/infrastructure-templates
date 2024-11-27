@@ -7,9 +7,9 @@ variable "environment" {
   description = "the name of your environment, e.g. \"prod\""
 }
 
-variable "cidr" {
+variable "cidr_blocks" {
   description = "The list of CIDR blocks for each VPC."
-  default = "10.0.0.0/16"
+  type = list(string)
 }
 
 variable "project_name" {

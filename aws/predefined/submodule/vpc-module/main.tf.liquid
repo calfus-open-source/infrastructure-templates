@@ -8,11 +8,9 @@ terraform {
 }
 
 module "vpc" {
-  
-  for_each = toset(var.moduleNames) # Creates one module instance per moduleName
+  for_each    = tomap({ for i, v in var.moduleNames : v => var.cidr_blocks[i] }) # Map each moduleName to its CIDR
   source      = "./modules/vpc"
-  name        = "${var.project_name}-${var.environment}-${each.value}-vpc"
+  name        = "${var.project_name}-${var.environment}-${each.key}-vpc"
   environment = var.environment
-  cidr       = var.cidr
-
+  cidr        = each.value # Use the mapped CIDR block
 }
