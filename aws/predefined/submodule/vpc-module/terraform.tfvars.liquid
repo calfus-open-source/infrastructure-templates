@@ -1,5 +1,5 @@
 
 project_name = "{{ project_name }}"
 environment = "{{ environment }}"
-cidr_blocks = ["10.0.0.0/16", "10.1.0.0/16"]
+cidr_blocks = ["10.0.0.0/16", "10.1.0.0/16", "10.2.0.0/16", "10.3.0.0/16"]
 moduleName = [{% for name in moduleName %}"{{ name }}"{% if forloop.last == false %}, {% endif %}{% endfor %}]
