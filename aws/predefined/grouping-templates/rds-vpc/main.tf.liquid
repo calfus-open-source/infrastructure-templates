@@ -1,0 +1,53 @@
+{% comment "Following can not be replaced with terraform variables and it requires to be defined upfront" %}{% endcomment %}
+provider "aws" {
+    region     = "{{ aws_region}}"
+}
+
+terraform {
+     backend "s3" {
+     }
+ }
+
+module "vpc" {
+  source      = "../modules/vpc"
+  name        = "${var.project_name}-${var.environment}"
+  environment = var.environment
+  cidr        = var.vpc_cidr
+  
+}
+
+module "rds" {
+  source                  = "../modules/rds"
+  name                    = var.project_name
+  environment             = var.environment
+  region                  = var.region
+  security_group_id       = module.vpc.default_security_group_id
+  vpc_id                  = module.vpc.id
+  vpc_private_subnets     = module.vpc.private_subnets
+  vpc_database_subnets    = module.vpc.database_subnets
+}
+
+Outputs
+output "vpc_id" {
+  value = module.vpc.id
+}
+
+output "vpc_public_subnets" {
+  value = module.vpc.public_subnets
+}
+
+output "vpc_private_subnets" {
+  value = module.vpc.private_subnets
+}
+
+output "vpc_database_subnets" {
+  value = module.vpc.database_subnets
+}
+
+output "rds_db_host" {
+  value = module.rds.db_host
+}
+
+output "rds_db_port" {
+  value = module.rds.db_port
+}
