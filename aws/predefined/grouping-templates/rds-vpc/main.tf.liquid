@@ -27,27 +27,3 @@ module "rds" {
   vpc_database_subnets    = module.vpc.database_subnets
 }
 
-Outputs
-output "vpc_id" {
-  value = module.vpc.id
-}
-
-output "vpc_public_subnets" {
-  value = module.vpc.public_subnets
-}
-
-output "vpc_private_subnets" {
-  value = module.vpc.private_subnets
-}
-
-output "vpc_database_subnets" {
-  value = module.vpc.database_subnets
-}
-
-output "rds_db_host" {
-  value = module.rds.db_host
-}
-
-output "rds_db_port" {
-  value = module.rds.db_port
-}
