@@ -1,4 +1,4 @@
 project_name       = "{{ project_name }}"
 environment        = "{{ environment }}"
 domain_name        = [{% for domain in domains %}"{{ domain }}"{% if forloop.last == false %}, {% endif %}{% endfor %}]  # Only if domain is provided
-route53_zoneid     = "{{ route53_zone_id }}"
+
