@@ -9,12 +9,12 @@ terraform {
 }
 
 data "aws_route53_zone" "route53_zone" {
-  name = var.domain_name
+  name = var.domain_name[0]
 }
 module "acm" {
     source = "./modules/acm"
     name = "${ var.project_name }"
     environment = "${ var.environment }"
-    domain_name = var.domain_name
+    domain_name = var.domain_name[0]
     route53_zoneid = data.aws_route53_zone.route53_zone.zone_id
 }
