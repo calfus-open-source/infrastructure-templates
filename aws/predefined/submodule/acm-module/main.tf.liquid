@@ -8,40 +8,14 @@ terraform {
     }
 }
 
-resource "aws_acm_certificate" "this" {
-  for_each             = toset(var.domain_name) # Iterate over the list of domains
-  domain_name          = each.value             # Use the current domain
-  validation_method    = "DNS"
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-# Add Route53 DNS validation for each domain
-resource "aws_route53_record" "validation" {
-  for_each = aws_acm_certificate.this
-
-  zone_id = var.route53_zoneid
-  name    = each.value.domain_validation_options[0].resource_record_name
-  type    = each.value.domain_validation_options[0].resource_record_type
-  records = [each.value.domain_validation_options[0].resource_record_value]
-  ttl     = 60
-}
-
-# Validate the ACM certificates after DNS validation
-resource "aws_acm_certificate_validation" "this" {
-  for_each           = aws_acm_certificate.this
-  certificate_arn    = each.value.arn
-  validation_record_fqdns = [
-    aws_route53_record.validation[each.key].fqdn
-  ]
+data "aws_route53_zone" "route53_zone" {
+  name = var.domain_name[0]
 }
 
 module "acm" {
-  source         = "./modules/acm"
-  name           = var.project_name
-  environment    = var.environment
-  domain_name    = var.domain_name   # Pass the entire list of domains
-  route53_zoneid = data.aws_route53_zone.route53_zone.zone_id
+    source = "./modules/acm"
+    name = "${ var.project_name }"
+    environment = "${ var.environment }"
+    domain_name = var.domain_name[0]
+    route53_zoneid = data.aws_route53_zone.route53_zone.zone_id
 }
