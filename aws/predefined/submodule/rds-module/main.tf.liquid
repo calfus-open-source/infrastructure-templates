@@ -5,12 +5,6 @@ terraform {
      backend "s3" {
      }
  }
-module "vpc" {
-    source = "./modules/vpc"
-    name = "${ var.project_name }-${ var.environment }-vpc"
-    environment = "${ var.environment }"
-    cidr = "${ var.vpc_cidr }"
-}
 module "rds"{
     source = "./modules/rds"  
     name = "${ var.project_name }"
