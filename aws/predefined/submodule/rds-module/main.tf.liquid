@@ -3,7 +3,6 @@ module "rds"{
     source = "./modules/rds"  
     name = "${ var.project_name }"
     environment = "${ var.environment }"
-    moduleName = "${ var.moduleName }"
     region                 = var.region
     vpc_id                 = module.vpc["${var.moduleName[0]}"].id
     vpc_private_subnets    = module.vpc["${var.moduleName[0]}"].private_subnets
