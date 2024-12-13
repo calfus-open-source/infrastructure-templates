@@ -10,7 +10,7 @@ terraform {
 
 module "vpc" {
   source      = "./modules/vpc"
-  name        = "${var.project_name}-${var.environment}"
+  name        = "${var.project_name}-${var.environment}-vpc"
   environment = var.environment
   cidr        = var.vpc_cidr
   
