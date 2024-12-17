@@ -31,6 +31,7 @@ module "rds"{
     vpc_public_subnets     = module.vpc.public_subnets
     vpc_database_subnets   = module.vpc.database_subnets
     security_group_id      = module.vpc.default_security_group_id
+    depends_on             = [ module.vpc ]
 }
 
 module "eks" {
