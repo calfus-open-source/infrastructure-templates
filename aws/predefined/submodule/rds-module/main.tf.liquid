@@ -1,0 +1,13 @@
+
+module "rds"{
+    source = "./modules/rds"  
+    name = "${ var.project_name }"
+    environment = "${ var.environment }"
+    moduleName = "${ var.moduleName }"
+    region                 = var.region
+    vpc_id                 = module.vpc["${var.moduleName[0]}"].id
+    vpc_private_subnets    = module.vpc["${var.moduleName[0]}"].private_subnets
+    vpc_public_subnets     = module.vpc["${var.moduleName[0]}"].public_subnets
+    vpc_database_subnets   = module.vpc["${var.moduleName[0]}"].database_subnets
+    security_group_id      = module.vpc["${var.moduleName[0]}"].default_security_group_id
+}

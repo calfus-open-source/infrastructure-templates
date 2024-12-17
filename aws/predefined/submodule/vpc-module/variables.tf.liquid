@@ -1,0 +1,17 @@
+variable "moduleName" {
+  description = "The list of module names for VPCs."
+  type = list(string)
+}
+
+variable "environment" {
+  description = "the name of your environment, e.g. \"prod\""
+}
+
+variable "cidr_blocks" {
+  description = "The list of CIDR blocks for each VPC."
+  type = list(string)
+}
+
+variable "project_name" {
+  description = "The name of the project."
+}

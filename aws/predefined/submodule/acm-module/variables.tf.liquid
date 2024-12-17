@@ -1,0 +1,16 @@
+variable "project_name" {
+  description = "The name of the project."
+}
+  
+  variable "environment" {
+    description = "the name of your environment, e.g. \"prod\""
+  }
+  
+  variable "domain_name" {
+    description = "Domain name"
+    type=list(string)
+  }
+  
+  variable "route53_zoneid" {
+    description = "route53 zone id"
+  }

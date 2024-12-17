@@ -1,0 +1,8 @@
+module "eks" {
+    source                  = "./modules/eks-fargate"
+    name                    = "${ var.project_name }"
+    environment             = "${ var.environment }"
+    vpc_id                  = module.vpc["${var.moduleName[0]}"].id  # Update to reference the correct VPC instance
+    vpc_private_subnets     = module.vpc["${var.moduleName[0]}"].private_subnets 
+    cluster_version         = "${ var.cluster_version }"
+}
