@@ -2,11 +2,6 @@ provider "aws" {
     region     = "ap-south-1"
 }
 
-terraform {
-    backend "s3" {
-    }
-}
-
 module "vpc" {
   for_each    = tomap({ for i, v in var.moduleName : v => var.cidr_blocks[i] }) # Map each moduleName to its CIDR
   source      = "./modules/vpc"
