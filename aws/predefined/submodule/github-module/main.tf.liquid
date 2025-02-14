@@ -11,7 +11,6 @@ module "repository" {
      source = "./modules/code-repository"
      name = "${ var.project_name }"
      appType = "${ var.appType }"
-     environment = "${ var.environment }"
      github_token = "${ var.github_access_token }"
      github_owner = "${ var.github_owner }"
 }
