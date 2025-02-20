@@ -10,15 +10,11 @@ github_owner = "{{ github_owner }}"
 {% assign app_types = "" %}
 
 {% if service_type == 'frontend-service' %}
-{% assign app_types = app_types | append: '["' | append: frontend_app_type | append: '"]' %}
-{% endif %}
-
-{% if service_type == 'backend-service' %}
-{% assign app_types = app_types | append: '["' | append: backend_app_type | append: '"]' %}
-{% endif %}
-
-{% if service_type != 'frontend-service' or service_type == 'backend-service' %}
-{% assign app_types = app_types | append: '["' | append: service_type | append: '"]' %}
+  {% assign app_types = app_types | append: '["' | append: frontend_app_type | append: '"]' %}
+{% elsif service_type == 'backend-service' %}
+  {% assign app_types = app_types | append: '["' | append: backend_app_type | append: '"]' %}
+{% else %}
+  {% assign app_types = app_types | append: '["' | append: service_type | append: '"]' %}
 {% endif %}
 
 appType = {{ app_types }}
