@@ -7,15 +7,22 @@ source_code_repository = "{{ source_code_repository }}"
 github_access_token = "{{ github_access_token }}"
 github_owner = "{{ github_owner }}"
 
+{% assign app_types = appType | default: "" %}
+
 {% if service_type == 'frontend-service' %}
-  {% assign app_types = frontend_app_type %}
+  {% assign new_app_type = frontend_app_type %}
 {% elsif service_type == 'backend-service' %}
-  {% assign app_types = backend_app_type %}
+  {% assign new_app_type = backend_app_type %}
 {% else %}
-  {% assign app_types = service_type %}
+  {% assign new_app_type = service_type %}
 {% endif %}
 
-appType = ["{{ app_types }}"]
+{% if app_types contains new_app_type %}
+  appType = ["{{ app_types }}"]
+{% else %}
+  {% assign updated_app_types = app_types | append: '", "' | append: new_app_type %}
+  appType = ["{{ updated_app_types }}"]
+{% endif %}
 
 {% endif %}
 
