@@ -17,11 +17,12 @@ github_owner = "{{ github_owner }}"
   {% assign new_app_type = service_type %}
 {% endif %}
 
-{% if app_types contains new_app_type %}
+{% if app_types == "" %}
+  appType = ["{{ new_app_type }}"]
+{% elsif app_types contains new_app_type %}
   appType = ["{{ app_types }}"]
 {% else %}
-  {% assign updated_app_types = app_types | append: '", "' | append: new_app_type %}
-  appType = ["{{ updated_app_types }}"]
+  appType = ["{{ app_types }}", "{{ new_app_type }}"]
 {% endif %}
 
 {% endif %}
