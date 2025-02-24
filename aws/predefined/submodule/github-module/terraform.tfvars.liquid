@@ -6,25 +6,7 @@ source_code_repository = "{{ source_code_repository }}"
 {% if source_code_repository == 'github' %}
 github_access_token = "{{ github_access_token }}"
 github_owner = "{{ github_owner }}"
-
-{% assign app_types = appType | default: "" %}
-
-{% if service_type == 'frontend-service' %}
-  {% assign new_app_type = frontend_app_type %}
-{% elsif service_type == 'backend-service' %}
-  {% assign new_app_type = backend_app_type %}
-{% else %}
-  {% assign new_app_type = service_type %}
-{% endif %}
-
-{% if app_types == "" %}
-  appType = ["{{ new_app_type }}"]
-{% elsif app_types contains new_app_type %}
-  appType = ["{{ app_types }}"]
-{% else %}
-  appType = ["{{ app_types }}", "{{ new_app_type }}"]
-{% endif %}
-
+appType = [{% for service in services %}"{{ service }}"{% if forloop.last == false %}, {% endif %}{% endfor %}]
 {% endif %}
 
 {% if domain %}
