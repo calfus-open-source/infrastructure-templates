@@ -1,0 +1,5 @@
+bucket         = "{{ project_id }}-tfstate"
+encrypt        = true
+key            = "{{ project_name }}-github.tfstate"
+region         = "{{ aws_region }}"
+dynamodb_table = "{{ project_id }}-tfstate-lock"

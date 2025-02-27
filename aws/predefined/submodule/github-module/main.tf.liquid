@@ -1,0 +1,25 @@
+provider "aws" {
+    region     = "{{ aws_region}}"
+}
+
+terraform {
+    backend "s3" {
+    }
+}
+
+module "repository" {
+     source = "./modules/code-repository"
+     name = "${ var.project_name }"
+     appType = "${ var.appType }"
+     github_token = "${ var.github_access_token }"
+     github_owner = "${ var.github_owner }"
+}
+
+locals {
+   repositories = [
+     for repo_name in var.appType : {
+       appType = repo_name
+       description     = "Repository for ${repo_name}"
+     }
+   ]
+ }
