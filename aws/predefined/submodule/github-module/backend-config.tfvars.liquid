@@ -1,7 +1,9 @@
 bucket         = "{{ project_id }}-tfstate"
 encrypt        = true
-{% unless environment %}
-key            = "{{ project_name }}-github.tfstate"
-{% endunless %}
+{% if environment %}
+key = "{{ project_name }}-{{ environment }}.tfstate"
+{% else %}
+  {% comment %} No key attribute is output when environment is not set {% endcomment %}
+{% endif %}
 region         = "{{ aws_region }}"
 dynamodb_table = "{{ project_id }}-tfstate-lock"
