@@ -19,7 +19,6 @@ locals {
    repositories = [
      for repo_name in var.appType : {
        appType = repo_name
-       description     = "Repository for ${repo_name}"
-     }
+       description     = "Repository for ${repo_name}" }
    ] }
  
