@@ -1,28 +1,17 @@
-variable "project_id" {
-    description = "The project id"
-}
+variable "project_id" { description = "The project id" }
 
-variable "project_name" {
-    description = "The project name"
-}
+variable "project_name" { description = "The project name" }
 
-variable "source_code_repository" {
-    description = "The source code repository"
-}
+variable "source_code_repository" { description = "The source code repository" }
 
 {% if source_code_repository == 'github' %}
-variable "github_access_token" {
-    description = "The github access"
-}
+variable "github_access_token" { description = "The github access" }
 
-variable "github_owner" {
-    description = "The github owner"
-}
+variable "github_owner" { description = "The github owner" }
 {% endif %}
 
 variable "appType" {
    description = "List of app names"
-   type        = list(string)
- }
+   type        = list(string) }
 
 
