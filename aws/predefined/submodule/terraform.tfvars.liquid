@@ -1,0 +1,24 @@
+region = "{{ aws_region }}"
+project_id = "{{ project_id }}"
+project_name = "{{ project_name }}"
+{% if source_code_repository == 'github' %}
+source_code_repository = "{{ source_code_repository }}"
+github_access_token = "{{ github_access_token }}"
+github_owner = "{{ github_owner }}"
+appType = [{% for service in services %}"{{ service }}"{% if forloop.last == false %}, {% endif %}{% endfor %}]
+{% endif %}
+{% if domain %}
+domain_name = "{{ domain }}"
+{% endif %}
+{% if  environment %}
+environment = "{{ environment }}"
+{% endif %}
+{% if cidr_blocks %}
+cidr_blocks = [{% for block in cidr_blocks %}"{{ block }}"{% if forloop.last == false %}, {% endif %}{% endfor %}]
+{% endif %}
+{% if moduleName %}
+moduleName = [{% for name in moduleName %}"{{ name }}"{% if forloop.last == false %}, {% endif %}{% endfor %}]
+{% endif %}
+{% if moduleName[-1] == "eks" %}
+cluster_version = "{{ aws_eks_cluster_version }}"
+{% endif %}
