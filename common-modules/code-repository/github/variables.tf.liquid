@@ -20,3 +20,9 @@ variable "environment" {
 variable "appType" {
   description = "The name of your repo"
 }
+
+{% if command == "create" %}
+variable "appName" {
+  description = "The name of your repo"
+}
+{% endif %}

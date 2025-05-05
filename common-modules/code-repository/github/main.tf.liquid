@@ -1,5 +1,8 @@
-# Terraform script to add gitops user in github and create a repository for gitops in github
-# Compare this snippet from magikube/sample/modules/gitops/main.tf:
+{% if command == "new" %}
+  {% assign app_list = appType %}
+{% elsif command == "create" %}
+  {% assign app_list = appName %}
+{% endif %}
 
 provider "github" {
   token = var.github_token
@@ -11,28 +14,29 @@ data "github_user" "current_user" {
 }
 
 resource "github_team" "github_repo_team" {
-  count       = length(var.appType)
-  name        = "${var.appType[count.index]}-team"
-  description = "Git Ops team for repo : ${var.appType[count.index]}-app"
+  count       = length(var.${app_list})
+  name        = "${var.${app_list}[count.index]}-team"
+  description = "Git Ops team for repo : ${var.${app_list}[count.index]}-app"
 }
 
 resource "github_team_membership" "github_repo_team_membership" {
-  count    = length(var.appType)
+  count    = length(var.${app_list})
   team_id  = github_team.github_repo_team[count.index].id
   username = data.github_user.current_user.login
   role     = "maintainer"
 }
 
 resource "github_team_repository" "github_team_repo" {
-  count      = length(var.appType)
+  count      = length(var.${app_list})
   team_id    = github_team.github_repo_team[count.index].id
   repository = github_repository.github_repo[count.index].name
   permission = "admin"
 }
+
 resource "github_repository" "github_repo" {
-  count       = length(var.appType)
-  name        = "${var.name}-${var.appType[count.index]}-app"
-  description = "Repository created with name : ${var.appType[count.index]}"
+  count       = length(var.${app_list})
+  name        = "${var.name}-${var.${app_list}[count.index]}-app"
+  description = "Repository created with name : ${var.${app_list}[count.index]}"
   visibility  = "private"
   has_issues  = false
   has_projects = false
@@ -48,4 +52,3 @@ output "gitops_repository_url" {
 output "gitops_repository_clone_url" {
   value = github_repository.github_repo[*].git_clone_url
 }
-
