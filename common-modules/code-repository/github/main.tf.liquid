@@ -1,7 +1,7 @@
 {% if command == "new" %}
   {% assign app_list = appType %}
 {% elsif command == "create" %}
-  {% assign app_list = service_name %}
+  {% assign app_list = service_names %}
 {% endif %}
 
 provider "github" {
