@@ -40,6 +40,12 @@ variable "common_resource_group_name" {
   type        = string
 }
 
+####################### acr variables #######################
+variable "acr_repo_names" {
+  description = "List of repository names for ACR."
+  type        = list(string)
+}
+
 ####################### vnet variables #######################
 
 variable "vnet_address_space" {
