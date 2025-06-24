@@ -6,6 +6,10 @@ terraform {
             source = "hashicorp/aws"
             version = "{{ aws_provider_version }}"
         }
+        helm = {
+            source  = "hashicorp/helm"
+            version = "{{ helm_provider_version }}"
+        }
         {% endif %}
 
         {% if source_code_repository == 'github' %}
