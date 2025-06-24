@@ -1,0 +1,159 @@
+resource "azurerm_virtual_network" "this" {
+  name                = "${{{ project_name }}}-${{{ environment }}}-vnet"
+  address_space       = {{ vnet_address_space }}
+  location            = {{ location }}
+  resource_group_name = {{ resource_group_name }}
+  tags                = {{ tags }}
+}
+
+# Network Interface attached to k8s master subnet
+resource "azurerm_network_interface" "master_nic" {
+  count               = {{ k8s_master_subnet_count }}
+  name                = "${{{ project_name }}}-${{{ environment }}}-master-nic-${count.index + 1}"
+  resource_group_name = {{ resource_group_name }}
+  location            = {{ location }}
+
+  ip_configuration {
+    name                          = "${{{ project_name }}}-${{{ environment }}}-master-nic-${count.index + 1}"
+    subnet_id                     = azurerm_subnet.k8s_master_subnet[count.index].id
+    private_ip_address_allocation = "Dynamic"
+  }
+
+  depends_on = [
+    azurerm_subnet.k8s_master_subnet
+  ]
+}
+
+# Route table association for master subnet
+resource "azurerm_subnet_route_table_association" "k8s_master_rt_assoc" {
+  count         = {{ k8s_master_subnet_count }}
+  subnet_id     = azurerm_subnet.k8s_master_subnet[count.index].id
+  route_table_id = azurerm_route_table.private_rt.id
+
+  depends_on = [
+    azurerm_subnet.k8s_master_subnet,
+    azurerm_route_table.private_rt
+  ]
+}
+
+# NSG association for the master subnet
+resource "azurerm_subnet_network_security_group_association" "k8s_master_subnet_nsg_association" {
+  subnet_id                 = azurerm_subnet.k8s_master_subnet[count.index].id
+  count                     = {{ k8s_master_subnet_count }}
+  network_security_group_id = {{ k8s_vm_nsg_id }}
+
+  depends_on = [
+    azurerm_subnet.k8s_master_subnet,
+    {{ k8s_vm_nsg_id }}
+  ]
+}
+
+resource "azurerm_subnet_network_security_group_association" "public_subnet_nsg_association" {
+  count                     = {{ public_subnet_count }}
+  subnet_id                 = azurerm_subnet.public[count.index].id
+  network_security_group_id = {{ bastion_nsg_id }}
+
+  # Depends on the public subnet and NSG
+  depends_on = [
+    azurerm_subnet.public,
+    {{ bastion_nsg_id }}
+  ]
+}
+
+resource "azurerm_subnet_network_security_group_association" "app_gateway_subnet_nsg_association" {
+  subnet_id                 = azurerm_subnet.app_gateway_subnet.id
+  network_security_group_id = {{ app_gateway_nsg_id }}
+
+  # Depends on the app gateway subnet and NSG
+  depends_on = [
+    azurerm_subnet.app_gateway_subnet,
+    {{ app_gateway_nsg_id }}
+  ]
+}
+
+resource "azurerm_nat_gateway" "this" {
+  name                = "${{{ project_name }}}-${{{ environment }}}-nat-gw"
+  resource_group_name = {{ resource_group_name }}
+  location            = {{ location }}
+  sku_name            = "Standard"
+  tags                = {{ tags }}
+}
+
+resource "azurerm_public_ip" "nat_gateway_ip" {
+  name                = "${{{ project_name }}}-${{{ environment }}}-nat-pip"
+  resource_group_name = {{ resource_group_name }}
+  location            = {{ location }}
+  allocation_method   = {{ public_ip_allocation_method }}
+  sku                 = {{ public_ip_sku }}
+  tags                = {{ tags }}
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "this" {
+  nat_gateway_id       = azurerm_nat_gateway.this.id
+  public_ip_address_id = azurerm_public_ip.nat_gateway_ip.id
+
+  # Depends on NAT Gateway and Public IP
+  depends_on = [
+    azurerm_nat_gateway.this,
+    azurerm_public_ip.nat_gateway_ip
+  ]
+}
+
+resource "azurerm_subnet_nat_gateway_association" "public" {
+  count         = {{ public_subnet_count }}
+  subnet_id     = azurerm_subnet.public[count.index].id
+  nat_gateway_id = azurerm_nat_gateway.this.id
+
+  # Depends on public subnet and NAT Gateway
+  depends_on = [
+    azurerm_subnet.public,
+    azurerm_nat_gateway.this
+  ]
+}
+resource "azurerm_route_table" "private_rt" {
+  name                = "${{{ project_name }}}-${{{ environment }}}-private-rt"
+  resource_group_name = {{ resource_group_name }}
+  location            = {{ location }}
+  tags                = {{ tags }}
+}
+resource "azurerm_route" "private_route" {
+  name                     = "private-to-internet"
+  resource_group_name      = {{ resource_group_name }}
+  route_table_name         = azurerm_route_table.private_rt.name
+  address_prefix           = "0.0.0.0/0"
+  next_hop_type            = "Internet"
+
+  # Depends on route table
+  depends_on = [
+    azurerm_route_table.private_rt
+  ]
+}
+
+resource "azurerm_subnet_route_table_association" "private_rt_assoc" {
+  count         = {{ k8s_worker_subnet_count }}
+  subnet_id     = azurerm_subnet.private[count.index].id
+  route_table_id = azurerm_route_table.private_rt.id
+
+  # Depends on private subnet and route table
+  depends_on = [
+    azurerm_subnet.private,
+    azurerm_route_table.private_rt
+  ]
+}
+
+# Associate each NIC with the NSG
+resource "azurerm_network_interface_security_group_association" "k8s_master_private_nic_nsg" {
+  count                     = {{ k8s_master_subnet_count }}
+  network_interface_id      = azurerm_network_interface.master_nic[count.index].id
+  network_security_group_id = {{ k8s_vm_nsg_id }}
+}
+
+# Associate each NIC with the ASG
+resource "azurerm_network_interface_application_security_group_association" "k8s_master_private_nic_asg" {
+  count                         = {{ k8s_master_subnet_count }}
+  network_interface_id          = azurerm_network_interface.master_nic[count.index].id
+  application_security_group_id = {{ k8s_asg_id }}
+}
