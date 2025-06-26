@@ -1,0 +1,68 @@
+variable "project_name" {
+  description = "The project name"
+  type        = string
+ }}
+
+variable "environment" {
+  description = "The environment (e.g., dev, qa, prod)"
+  type        = string
+ }}
+
+variable "location" {
+  description = "The Azure location/region"
+  type        = string
+ }}
+
+variable "resource_group_name" {
+  description = "The name of the resource group"
+  type        = string
+ }}
+
+variable "tags" {
+  description = "Tags to apply to all resources"
+  type        = map(string)
+  default     = { }}
+ }}
+
+# OpenAI specific variables
+variable "openai_location" {
+  description = "The Azure location for OpenAI service (limited regions)"
+  type        = string
+  default     = "East US"
+ }}
+
+variable "gpt4o_capacity" {
+  description = "The capacity for GPT-4o deployment (tokens per minute)"
+  type        = number
+  default     = 100  # Match flexify-rg capacity
+ }}
+
+variable "o3_mini_capacity" {
+  description = "The capacity for o3-mini deployment (tokens per minute)"
+  type        = number
+  default     = 100  # Match flexify-rg capacity
+ }}
+
+variable "embedding_capacity" {
+  description = "The capacity for text embedding deployment (tokens per minute)"
+  type        = number
+  default     = 50  # Match flexify-rg capacity
+ }}
+
+# AI Foundry workspace configuration
+variable "enable_private_endpoint" {
+  description = "Enable private endpoint for AI Foundry workspace"
+  type        = bool
+  default     = false
+ }}
+
+variable "retention_in_days" {
+  description = "Application Insights retention in days"
+  type        = number
+  default     = 30
+ }}
+
+variable "existing_key_vault_id" {
+  description = "The ID of the existing Key Vault to reuse for AI Foundry secrets"
+  type        = string
+ }} 

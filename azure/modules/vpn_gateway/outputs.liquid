@@ -1,0 +1,39 @@
+output "vpn_gateway_id" {
+  description = "The ID of the VPN Gateway"
+  value       = azurerm_virtual_network_gateway.vpn_gateway.id
+ }}
+
+output "vpn_gateway_name" {
+  description = "The name of the VPN Gateway"
+  value       = azurerm_virtual_network_gateway.vpn_gateway.name
+ }}
+
+output "vpn_gateway_public_ip" {
+  description = "The public IP address of the VPN Gateway"
+  value       = azurerm_public_ip.vpn_gateway_ip.ip_address
+ }}
+
+output "vpn_gateway_fqdn" {
+  description = "The FQDN of the VPN Gateway"
+  value       = azurerm_public_ip.vpn_gateway_ip.fqdn
+ }}
+
+output "gateway_subnet_id" {
+  description = "The ID of the Gateway Subnet"
+  value       = azurerm_subnet.gateway_subnet.id
+ }}
+
+output "frontend_private_subnet_id" {
+  description = "The ID of the frontend private subnet"
+  value       = azurerm_subnet.frontend_private_subnet.id
+ }}
+
+output "frontend_private_subnet_address_prefix" {
+  description = "The address prefix of the frontend private subnet"
+  value       = azurerm_subnet.frontend_private_subnet.address_prefixes[0]
+ }}
+
+output "vpn_client_address_space" {
+  description = "The address space for VPN clients"
+  value       = vpn_client_address_space
+ }} 
