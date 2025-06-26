@@ -18,7 +18,7 @@ module "vnet" {
   k8s_vm_nsg_id               = module.nsg.k8s_vm_nsg_id
   k8s_private_subnet_offset   = k8s_private_subnet_offset
   public_subnet_offset        = public_subnet_offset 
- }}
+ }
 
 module "nsg" {
   source              = "../../modules/security_groups"
@@ -34,7 +34,7 @@ module "nsg" {
   k8s_private_subnet_offset  = k8s_private_subnet_offset
   frontend_subnet_offset     = frontend_subnet_offset
   vpn_client_address_space   = vpn_client_address_space
- }}
+ }
 
 module "bastion" {
   source                                = "../../modules/bastion"
@@ -57,7 +57,7 @@ module "bastion" {
   bastion_public_ip_sku                 = bastion_public_ip_sku
   bastion_os_disk_caching               = bastion_os_disk_caching
   bastion_vm_size                       = bastion_vm_size
- }}
+ }
 
 
 module "agw" {
@@ -75,7 +75,7 @@ module "agw" {
   azurerm_key_vault_id              = module.kv.key_vault_id
   appgateway_kv_identity_id         = module.kv.kv_access_identity 
   azurerm_key_vault_certificate_secret_id = module.kv.certificate_secret_id
- }}
+ }
 
 module "kv" {
   source                      = "../../modules/key_vault"
@@ -84,13 +84,13 @@ module "kv" {
   location                    = location
   resource_group_name         = resource_group_name
   availability_zones          = availability_zones
- }}
+ }
 
 module "k8s_common" {
   source                            = "../../modules/kubernetes/common"
   project_name                      = project_name
   environment                       = environment
- }}
+ }
 
 module "aks" {
   source                           = "../../modules/kubernetes/aks"
@@ -105,7 +105,7 @@ module "aks" {
   kv_user_assigned_identity_id     = module.kv.kv_access_identity
   app_gateway_subnet_id            = module.vnet.app_gateway_subnet_id
   tags = tags
- }}
+ }
 
 module "sql_server" {
   source              = "../../modules/sql_server"
@@ -122,7 +122,7 @@ module "sql_server" {
     module.vnet.k8s_private_subnet,
     module.vnet.public_subnet_id
   ]
- }}
+ }
 
 module "vpn_gateway" {
   count               = enable_vpn_gateway ? 1 : 0
@@ -141,7 +141,7 @@ module "vpn_gateway" {
   subnet_prefix_length         = subnet_prefix_length
   k8s_private_subnet_offset    = k8s_private_subnet_offset
   frontend_subnet_offset       = frontend_subnet_offset
- }}
+ }
 
 module "ai_foundry" {
   source = "../../modules/ai_foundry"
@@ -157,4 +157,4 @@ module "ai_foundry" {
   existing_key_vault_id     = module.kv.key_vault_id
 
   tags = tags
- }}
+ }
