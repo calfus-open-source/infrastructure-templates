@@ -8,8 +8,8 @@ resource "azurerm_application_insights" "ai_foundry_insights" {
 
   tags = merge(tags, {
     Name = "{{ project_name }}-{{ environment }}-ai-insights"
-   }})
- }}
+  })
+}
 
 resource "azurerm_storage_account" "ai_foundry_storage" {
   name                     = "{{ replace(project_name, "-", "") }}{{ environment }}aistorage"
@@ -20,15 +20,16 @@ resource "azurerm_storage_account" "ai_foundry_storage" {
 
   blob_properties {
     versioning_enabled = true
+
     delete_retention_policy {
       days = 7
-     }}
-   }}
+    }
+  }
 
   tags = merge(tags, {
     Name = "{{ project_name }}-{{ environment }}-ai-storage"
-   }})
- }}
+  })
+}
 
 resource "azurerm_container_registry" "ai_foundry_acr" {
   name                = "{{ replace(project_name, "-", "") }}{{ environment }}aiacr"
@@ -39,44 +40,44 @@ resource "azurerm_container_registry" "ai_foundry_acr" {
 
   tags = merge(tags, {
     Name = "{{ project_name }}-{{ environment }}-ai-acr"
-   }})
- }}
+  })
+}
 
-# Create Azure AI Services (using the proper resource type)
+# Create Azure AI Services
 resource "azurerm_ai_services" "ai_services" {
   name                  = "{{ replace(project_name, "-", "") }}{{ environment }}aiservices"
-  location              = openai_location  # Use openai_location variable for flexibility
+  location              = openai_location
   resource_group_name   = resource_group_name
   sku_name              = "S0"
   custom_subdomain_name = "{{ replace(project_name, "-", "") }}{{ environment }}aiservices"
 
   tags = merge(tags, {
     Name = "{{ project_name }}-{{ environment }}-ai-services"
-   }})
- }}
+  })
+}
 
-# Create Azure AI Foundry Hub (using the proper resource type)
+# Create Azure AI Foundry Hub
 resource "azurerm_ai_foundry" "ai_foundry_hub" {
   name                = "{{ project_name }}-{{ environment }}-ai-hub"
   resource_group_name = resource_group_name
   location            = location
   storage_account_id  = azurerm_storage_account.ai_foundry_storage.id
-  key_vault_id        = existing_key_vault_id  # Use existing Key Vault
+  key_vault_id        = existing_key_vault_id
 
   identity {
     type = "SystemAssigned"
-   }}
+  }
 
   tags = merge(tags, {
     Name = "{{ project_name }}-{{ environment }}-ai-hub"
-   }})
+  })
 
   depends_on = [
     azurerm_application_insights.ai_foundry_insights,
     azurerm_storage_account.ai_foundry_storage,
     azurerm_container_registry.ai_foundry_acr
   ]
- }}
+}
 
 # Create Azure AI Foundry Project
 resource "azurerm_ai_foundry_project" "ai_foundry_project" {
@@ -86,16 +87,16 @@ resource "azurerm_ai_foundry_project" "ai_foundry_project" {
 
   identity {
     type = "SystemAssigned"
-   }}
+  }
 
   tags = merge(tags, {
     Name = "{{ project_name }}-{{ environment }}-ai-project"
-   }})
+  })
 
   depends_on = [azurerm_ai_foundry.ai_foundry_hub]
- }}
+}
 
-# Deploy GPT-4o model (matches flexify-rg) - using GlobalStandard SKU
+# Deploy GPT-4o model
 resource "azurerm_cognitive_deployment" "gpt4o_deployment" {
   name                 = "gpt-4o"
   cognitive_account_id = azurerm_ai_services.ai_services.id
@@ -103,16 +104,16 @@ resource "azurerm_cognitive_deployment" "gpt4o_deployment" {
   model {
     format  = "OpenAI"
     name    = "gpt-4o"
-    version = "2024-11-20"  # Same version as flexify-rg
-   }}
+    version = "2024-11-20"
+  }
 
   sku {
-    name     = "GlobalStandard"  # Use GlobalStandard for newer models
+    name     = "GlobalStandard"
     capacity = gpt4o_capacity
-   }}
- }}
+  }
+}
 
-# Deploy o3-mini model (matches flexify-rg) - using GlobalStandard SKU
+# Deploy o3-mini model
 resource "azurerm_cognitive_deployment" "o3_mini_deployment" {
   name                 = "o3-mini"
   cognitive_account_id = azurerm_ai_services.ai_services.id
@@ -120,16 +121,16 @@ resource "azurerm_cognitive_deployment" "o3_mini_deployment" {
   model {
     format  = "OpenAI"
     name    = "o3-mini"
-    version = "2025-01-31"  # Same version as flexify-rg
-   }}
+    version = "2025-01-31"
+  }
 
   sku {
-    name     = "GlobalStandard"  # Use GlobalStandard instead of Standard for o3-mini
+    name     = "GlobalStandard"
     capacity = o3_mini_capacity
-   }}
- }}
+  }
+}
 
-# Deploy text-embedding model (matches flexify-rg)
+# Deploy text-embedding model
 resource "azurerm_cognitive_deployment" "embedding_deployment" {
   name                 = "text-embedding-ada-002"
   cognitive_account_id = azurerm_ai_services.ai_services.id
@@ -137,32 +138,32 @@ resource "azurerm_cognitive_deployment" "embedding_deployment" {
   model {
     format  = "OpenAI"
     name    = "text-embedding-ada-002"
-    version = "2"  # Same version as flexify-rg
-   }}
+    version = "2"
+  }
 
   sku {
     name     = "Standard"
     capacity = embedding_capacity
-   }}
- }}
+  }
+}
 
-# Store AI Services API key in existing Key Vault
+# Store AI Services API key in Key Vault
 resource "azurerm_key_vault_secret" "ai_services_api_key" {
   name         = "ai-services-api-key"
   value        = azurerm_ai_services.ai_services.primary_access_key
-  key_vault_id = existing_key_vault_id  # Use existing Key Vault
+  key_vault_id = existing_key_vault_id
 
   depends_on = [azurerm_ai_services.ai_services]
- }}
+}
 
-# Store AI Services endpoint in existing Key Vault
+# Store AI Services endpoint in Key Vault
 resource "azurerm_key_vault_secret" "ai_services_endpoint" {
   name         = "ai-services-endpoint"
   value        = azurerm_ai_services.ai_services.endpoint
-  key_vault_id = existing_key_vault_id  # Use existing Key Vault
+  key_vault_id = existing_key_vault_id
 
   depends_on = [azurerm_ai_services.ai_services]
- }}
+}
 
 # Get current Azure configuration
-data "azurerm_client_config" "current" { }} 
+data "azurerm_client_config" "current" {}

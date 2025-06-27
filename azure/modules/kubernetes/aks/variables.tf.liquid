@@ -2,51 +2,54 @@
 variable "project_name" {
   description = "The project name"
   type        = string
- }}
+}
 
 variable "environment" {
   description = "The environment (e.g., dev, qa, prod)"
   type        = string
- }}
+}
 
 variable "common_resource_group_name" {
-  description = "The name of the common resource group where acr repos are created."
+  description = "The name of the common resource group where ACR repos are created."
   type        = string
- }}
+}
 
 variable "location" {
   description = "The Azure location/region"
   type        = string
- }}
+}
 
 variable "resource_group_name" {
   description = "The name of the resource group"
   type        = string
- }}
+}
 
 variable "aks_subnet_id" {
+  description = "The ID of the AKS subnet"
   type        = string
- }}
+}
 
 variable "k8s_ssh_key" {
+  description = "The SSH public key used for AKS cluster login"
   type        = string
- }}
+}
 
 variable "app_gateway_id" {
+  description = "The ID of the Application Gateway"
   type        = string
- }}
+}
 
 variable "kv_user_assigned_identity_id" {
   description = "The ID of the Key Vault user-assigned managed identity"
   type        = string
- }}
+}
 
 variable "app_gateway_subnet_id" {
   description = "The ID of the Application Gateway subnet"
   type        = string
- }}
+}
 
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
- }}
+}

@@ -1,4 +1,4 @@
-data "azurerm_client_config" "current" { }}
+data "azurerm_client_config" "current" {}
 
 # AKS Cluster
 resource "azurerm_kubernetes_cluster" "aks_cluster" {
@@ -8,7 +8,6 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {
   kubernetes_version  = "1.30.10"
   dns_prefix          = "aksserverlessautoscaling"
 
-  # Default node pool (system node pool)
   default_node_pool {
     name                  = "system"
     node_count            = 1
@@ -21,87 +20,80 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {
     type                  = "VirtualMachineScaleSets"
     os_disk_size_gb       = 40
     os_sku                = "Ubuntu"
-   }}
+  }
 
   ingress_application_gateway {
     gateway_id = app_gateway_id
-   }}
+  }
 
   linux_profile {
     admin_username = "kube"
+
     ssh_key {
       key_data = k8s_ssh_key
-     }}
-   }}
+    }
+  }
 
   identity {
     type = "SystemAssigned"
-   }}
+  }
 
   network_profile {
-    network_plugin  = "azure"
-    #pod_cidr        = "10.244.0.0/16"
-    service_cidr    = "10.96.0.0/12"
-    dns_service_ip = "10.96.0.10"
-
-   }}
+    network_plugin   = "azure"
+    service_cidr     = "10.96.0.0/12"
+    dns_service_ip   = "10.96.0.10"
+  }
 
   lifecycle {
     ignore_changes = [
       default_node_pool["node_count"]
     ]
-   }}
+  }
+
   tags = merge(
-      tags,
-      {
-       }},
+    tags,
+    {}
   )
- }}
+}
 
 # Assign ACRPull Role to the AKS Cluster's Managed Identity
 resource "azurerm_role_assignment" "aks_acr_role_assignment" {
   principal_id         = azurerm_kubernetes_cluster.aks_cluster.identity[0].principal_id
   role_definition_name = "AcrPull"
   scope                = "/subscriptions/{{ data.azurerm_client_config.current.subscription_id }}/resourceGroups/{{ common_resource_group_name }}"
- }}
+}
 
 # Grant Reader access to the current user for the AKS managed resource group
 resource "azurerm_role_assignment" "aks_managed_rg_reader" {
   scope                = "/subscriptions/{{ data.azurerm_client_config.current.subscription_id }}/resourceGroups/{{ azurerm_kubernetes_cluster.aks_cluster.node_resource_group }}"
   role_definition_name = "Reader"
   principal_id         = data.azurerm_client_config.current.object_id
- }}
+}
 
 # AGIC requires Reader access to the resource group containing the Application Gateway
 resource "azurerm_role_assignment" "agic_resource_group_reader" {
   scope                = "/subscriptions/{{ data.azurerm_client_config.current.subscription_id }}/resourceGroups/{{ resource_group_name }}"
   role_definition_name = "Reader"
   principal_id         = azurerm_kubernetes_cluster.aks_cluster.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
- }}
+}
 
 # AGIC requires Contributor access to the Application Gateway itself
 resource "azurerm_role_assignment" "agic_app_gateway_contributor" {
   scope                = app_gateway_id
   role_definition_name = "Contributor"
   principal_id         = azurerm_kubernetes_cluster.aks_cluster.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
- }}
+}
 
 # AGIC requires Managed Identity Operator access to the Key Vault user-assigned identity
 resource "azurerm_role_assignment" "agic_managed_identity_operator" {
   scope                = kv_user_assigned_identity_id
   role_definition_name = "Managed Identity Operator"
   principal_id         = azurerm_kubernetes_cluster.aks_cluster.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
- }}
+}
 
-# AGIC requires Network Contributor access to the Application Gateway subnet for subnet join action
+# AGIC requires Network Contributor access to the Application Gateway subnet
 resource "azurerm_role_assignment" "agic_subnet_network_contributor" {
   scope                = app_gateway_subnet_id
   role_definition_name = "Network Contributor"
   principal_id         = azurerm_kubernetes_cluster.aks_cluster.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
- }}
-
-# Note: Instead of role assignment, we'll use image pull secrets
-# This avoids the need for subscription-level permissions
-# The ACR admin credentials will be used to create Kubernetes secrets
-
-
+}

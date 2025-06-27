@@ -1,89 +1,89 @@
 variable "project_name" {
   description = "The project name"
   type        = string
- }}
+}
 
 variable "environment" {
   description = "The environment (e.g., dev, qa, prod)"
   type        = string
- }}
+}
 
 variable "location" {
   description = "The Azure location/region"
   type        = string
- }}
+}
 
 variable "resource_group_name" {
   description = "The name of the resource group"
   type        = string
- }}
+}
 
 variable "availability_zones" {
-  description = "List of availability zones to deploy resources into."
+  description = "List of availability zones to deploy resources into"
   type        = list(string)
- }}
+}
 
 variable "vnet_address_space" {
-  description = "The address space for the VNet"
+  description = "The address space for the Virtual Network"
   type        = list(string)
- }}
+}
 
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
- }}
+}
 
 variable "subnet_prefix_length" {
-  description = "The prefix length for subnets"
+  description = "The CIDR prefix length for subnets"
   type        = number
- }}
+}
 
 variable "k8s_private_subnet_offset" {
-  description = "Offset for private subnets in the address space"
+  description = "Subnet offset for the Kubernetes private subnet"
   type        = number
- }}
+}
 
 variable "private_subnet_offset" {
-  description = "Offset for private subnets in the address space"
+  description = "Subnet offset for additional private subnets (if any)"
   type        = number
- }}
+}
 
 variable "public_subnet_offset" {
-  description = "Offset for public subnets in the address space"
+  description = "Subnet offset for the public subnet"
   type        = number
- }}
+}
 
 variable "public_ip_allocation_method" {
-  description = "The allocation method for public IPs"
+  description = "The allocation method for public IPs (e.g., Static, Dynamic)"
   type        = string
- }}
+}
 
 variable "public_ip_sku" {
-  description = "The SKU for public IPs"
+  description = "The SKU for public IPs (e.g., Basic, Standard)"
   type        = string
- }}
+}
 
 variable "k8s_vm_nsg_id" {
-  description = "ID of the NSG to be attached to the private subnet"
+  description = "ID of the Network Security Group to attach to the Kubernetes private subnet"
   type        = string
- }}
+}
 
 variable "bastion_nsg_id" {
-  description = "ID of the NSG to be attached to the public subnet"
+  description = "ID of the Network Security Group to attach to the public subnet for Bastion"
   type        = string
- }}
+}
 
 variable "app_gateway_subnet_offset" {
-  description = "Offset for the Application Gateway subnet index to ensure no overlap."
+  description = "Subnet offset for the Application Gateway subnet"
   type        = number
- }}
+}
 
 variable "app_gateway_nsg_id" {
-  description = "ID of the NSG to be attached to the Applicationb gateway subnet"
+  description = "ID of the Network Security Group to attach to the Application Gateway subnet"
   type        = string
- }}
+}
 
 variable "k8s_asg_id" {
-  description = "ID of the ASG to be attached to the private subnet"
+  description = "ID of the Application Security Group to attach to the Kubernetes private NIC"
   type        = string
- }}
+}

@@ -4,24 +4,24 @@ resource "azurerm_subnet" "gateway_subnet" {
   resource_group_name  = resource_group_name
   virtual_network_name = split("/", virtual_network_id)[8]
   address_prefixes     = [gateway_subnet_address_prefix]
- }}
+}
 
 # Public IP for VPN Gateway
 resource "azurerm_public_ip" "vpn_gateway_ip" {
-  name                = "{{ project_name }}-{{ environment }}-vpn-gateway-ip"
+  name                = "${project_name}-${environment}-vpn-gateway-ip"
   location            = location
   resource_group_name = resource_group_name
   allocation_method   = "Static"
   sku                 = "Standard"
   zones               = availability_zones
-  
+
   tags = merge(tags, {
-    Name = "{{ project_name }}-{{ environment }}-vpn-gateway-ip"
-   }})
- }}
+    Name = "${project_name}-${environment}-vpn-gateway-ip"
+  })
+}
 
 resource "azurerm_virtual_network_gateway" "vpn_gateway" {
-  name                = "{{ project_name }}-{{ environment }}-vpn-gateway"
+  name                = "${project_name}-${environment}-vpn-gateway"
   location            = location
   resource_group_name = resource_group_name
 
@@ -38,45 +38,43 @@ resource "azurerm_virtual_network_gateway" "vpn_gateway" {
     public_ip_address_id          = azurerm_public_ip.vpn_gateway_ip.id
     private_ip_address_allocation = "Dynamic"
     subnet_id                     = azurerm_subnet.gateway_subnet.id
-   }}
+  }
 
   vpn_client_configuration {
-    address_space = vpn_client_address_space
-
-    aad_tenant   = aad_tenant
-    aad_audience = aad_audience
-    aad_issuer   = aad_issuer
-
-    vpn_client_protocols = ["OpenVPN"]
-   }}
+    address_space         = vpn_client_address_space
+    aad_tenant            = aad_tenant
+    aad_audience          = aad_audience
+    aad_issuer            = aad_issuer
+    vpn_client_protocols  = ["OpenVPN"]
+  }
 
   tags = merge(tags, {
-    Name = "{{ project_name }}-{{ environment }}-vpn-gateway"
-   }})
+    Name = "${project_name}-${environment}-vpn-gateway"
+  })
 
   timeouts {
     create = "60m"
     delete = "60m"
-   }}
- }}
+  }
+}
 
 # Private subnet for frontend applications
 resource "azurerm_subnet" "frontend_private_subnet" {
-  name                 = "{{ project_name }}-{{ environment }}-frontend-private"
+  name                 = "${project_name}-${environment}-frontend-private"
   resource_group_name  = resource_group_name
   virtual_network_name = split("/", virtual_network_id)[8]
-  address_prefixes     = [cidrsubnet(element(vnet_address_space, 0), subnet_prefix_length, frontend_subnet_offset)]  # Using dynamic calculation
- }}
+  address_prefixes     = [cidrsubnet(element(vnet_address_space, 0), subnet_prefix_length, frontend_subnet_offset)]
+}
 
 # Associate NSG with frontend private subnet
 resource "azurerm_subnet_network_security_group_association" "frontend_private_nsg_association" {
   subnet_id                 = azurerm_subnet.frontend_private_subnet.id
   network_security_group_id = frontend_private_nsg_id
- }}
+}
 
 # Route table for VPN clients to access private subnets
 resource "azurerm_route_table" "vpn_route_table" {
-  name                = "{{ project_name }}-{{ environment }}-vpn-routes"
+  name                = "${project_name}-${environment}-vpn-routes"
   location            = location
   resource_group_name = resource_group_name
 
@@ -84,21 +82,21 @@ resource "azurerm_route_table" "vpn_route_table" {
     name           = "vpn-to-frontend"
     address_prefix = cidrsubnet(element(vnet_address_space, 0), subnet_prefix_length, frontend_subnet_offset)
     next_hop_type  = "VnetLocal"
-   }}
+  }
 
   route {
     name           = "vpn-to-k8s"
     address_prefix = cidrsubnet(element(vnet_address_space, 0), subnet_prefix_length, k8s_private_subnet_offset)
     next_hop_type  = "VnetLocal"
-   }}
+  }
 
   tags = merge(tags, {
-    Name = "{{ project_name }}-{{ environment }}-vpn-routes"
-   }})
- }}
+    Name = "${project_name}-${environment}-vpn-routes"
+  })
+}
 
 # Associate route table with frontend private subnet
 resource "azurerm_subnet_route_table_association" "frontend_private_routes" {
   subnet_id      = azurerm_subnet.frontend_private_subnet.id
   route_table_id = azurerm_route_table.vpn_route_table.id
- }}
+}

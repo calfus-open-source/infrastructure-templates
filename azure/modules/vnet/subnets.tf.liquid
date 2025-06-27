@@ -1,33 +1,26 @@
 resource "azurerm_subnet" "public" {
-  name                = "{{ project_name }}-{{ environment }}-public"
-  resource_group_name = resource_group_name
+  name                 = "${var.project_name}-${var.environment}-public"
+  resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
-  address_prefixes    = [cidrsubnet(element(vnet_address_space, 0), subnet_prefix_length, public_subnet_offset)]
-  
-  # Add service endpoints for SQL access
-  service_endpoints = ["Microsoft.Sql"]
- }}
+  address_prefixes     = [cidrsubnet(element(var.vnet_address_space, 0), var.subnet_prefix_length, var.public_subnet_offset)]
 
-# Kubernetes master subnet (new subnet for master nodes)
-resource "azurerm_subnet" "k8s_private_subnet" {
-  name                = "{{ project_name }}-{{ environment }}-k8s-master"
-  resource_group_name = resource_group_name
-  virtual_network_name = azurerm_virtual_network.this.name
-  address_prefixes    = [cidrsubnet(element(vnet_address_space, 0), subnet_prefix_length, k8s_private_subnet_offset)]
-  
   # Add service endpoints for SQL access
   service_endpoints = ["Microsoft.Sql"]
- }}
+}
+
+resource "azurerm_subnet" "k8s_private_subnet" {
+  name                 = "${var.project_name}-${var.environment}-k8s-master"
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = azurerm_virtual_network.this.name
+  address_prefixes     = [cidrsubnet(element(var.vnet_address_space, 0), var.subnet_prefix_length, var.k8s_private_subnet_offset)]
+
+  # Add service endpoints for SQL access
+  service_endpoints = ["Microsoft.Sql"]
+}
 
 resource "azurerm_subnet" "app_gateway_subnet" {
-  name                = "{{ project_name }}-{{ environment }}-app-gateway-subnet"
-  resource_group_name = resource_group_name
+  name                 = "${var.project_name}-${var.environment}-app-gateway-subnet"
+  resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
-
-  # Use an unused subnet index for the app gateway subnet.
-  address_prefixes    = [cidrsubnet(
-    element(vnet_address_space, 0),
-    subnet_prefix_length,
-    app_gateway_subnet_offset
-  )]
- }}
+  address_prefixes     = [cidrsubnet(element(var.vnet_address_space, 0), var.subnet_prefix_length, var.app_gateway_subnet_offset)]
+}
