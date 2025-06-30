@@ -1,5 +1,5 @@
 resource "azurerm_virtual_network" "this" {
-  name                = "${var.project_name}-${var.environment}-vnet"
+  name                = "{{ project_name }}-{{ environment }}-vnet"
   address_space       = var.vnet_address_space
   location            = var.location
   resource_group_name = var.resource_group_name
@@ -7,12 +7,12 @@ resource "azurerm_virtual_network" "this" {
 }
 
 resource "azurerm_network_interface" "private_nic" {
-  name                = "${var.project_name}-${var.environment}-private-nic"
+  name                = "{{ project_name }}-{{ environment }}-private-nic"
   resource_group_name = var.resource_group_name
   location            = var.location
 
   ip_configuration {
-    name                          = "${var.project_name}-${var.environment}-private-nic"
+    name                          = "{{ project_name }}-{{ environment }}-private-nic"
     subnet_id                     = azurerm_subnet.k8s_private_subnet.id
     private_ip_address_allocation = "Dynamic"
   }
@@ -39,7 +39,7 @@ resource "azurerm_subnet_network_security_group_association" "app_gateway_subnet
 }
 
 resource "azurerm_nat_gateway" "this" {
-  name                = "${var.project_name}-${var.environment}-nat-gw"
+  name                = "{{ project_name }}-{{ environment }}-nat-gw"
   resource_group_name = var.resource_group_name
   location            = var.location
   sku_name            = "Standard"
@@ -47,12 +47,12 @@ resource "azurerm_nat_gateway" "this" {
 }
 
 resource "azurerm_public_ip" "nat_gateway_ip" {
-  name                = "${var.project_name}-${var.environment}-nat-pip"
+  name                = "{{ project_name }}-{{ environment }}-nat-pip"
   resource_group_name = var.resource_group_name
   location            = var.location
   allocation_method   = var.public_ip_allocation_method
   sku                 = var.public_ip_sku
-
+  tags                = var.tags
   lifecycle {
     create_before_destroy = true
   }
@@ -69,7 +69,7 @@ resource "azurerm_subnet_nat_gateway_association" "public" {
 }
 
 resource "azurerm_route_table" "private_rt" {
-  name                = "${var.project_name}-${var.environment}-private-rt"
+  name                = "{{ project_name }}-{{ environment }}-private-rt"
   resource_group_name = var.resource_group_name
   location            = var.location
   tags                = var.tags

@@ -1,5 +1,5 @@
 resource "azurerm_subnet" "public" {
-  name                 = "${var.project_name}-${var.environment}-public"
+  name                 = "{{ project_name }}-{{ environment }}-public"
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
   address_prefixes     = [cidrsubnet(element(var.vnet_address_space, 0), var.subnet_prefix_length, var.public_subnet_offset)]
@@ -9,7 +9,7 @@ resource "azurerm_subnet" "public" {
 }
 
 resource "azurerm_subnet" "k8s_private_subnet" {
-  name                 = "${var.project_name}-${var.environment}-k8s-master"
+  name                 = "{{ project_name }}-{{ environment }}-k8s-master"
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
   address_prefixes     = [cidrsubnet(element(var.vnet_address_space, 0), var.subnet_prefix_length, var.k8s_private_subnet_offset)]
@@ -19,7 +19,7 @@ resource "azurerm_subnet" "k8s_private_subnet" {
 }
 
 resource "azurerm_subnet" "app_gateway_subnet" {
-  name                 = "${var.project_name}-${var.environment}-app-gateway-subnet"
+  name                 = "{{ project_name }}-{{ environment }}-app-gateway-subnet"
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
   address_prefixes     = [cidrsubnet(element(var.vnet_address_space, 0), var.subnet_prefix_length, var.app_gateway_subnet_offset)]

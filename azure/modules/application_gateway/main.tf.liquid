@@ -1,12 +1,12 @@
 # Define the public IP for the Application Gateway (required for WAF_v2)
 resource "azurerm_public_ip" "app_gateway_ip" {
   name                = "{{ project_name }}-{{ environment }}-appgateway-pip"
-  resource_group_name = resource_group_name
-  location            = location
-  allocation_method   = public_ip_allocation_method
-  sku                 = public_ip_sku
-  tags                = tags
-  zones               = availability_zones
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  allocation_method   = var.public_ip_allocation_method
+  sku                 = var.public_ip_sku
+  tags                = var.tags
+  zones               = var.availability_zones
 
   lifecycle {
     create_before_destroy = true
@@ -31,15 +31,15 @@ locals {
   gateway_config_name              = "${local.prefix}-gatewayconf"
   probe_name                       = "${local.prefix}-probe"
   ssl_cert_name                    = "${local.prefix}-sslcert"
-  has_ssl_certificate              = azurerm_key_vault_certificate_secret_id != null
+  has_ssl_certificate              = var.azurerm_key_vault_certificate_secret_id != null
 }
 
 # Define the Application Gateway
 resource "azurerm_application_gateway" "main" {
   name                = "${local.prefix}-appgw"
-  resource_group_name = resource_group_name
-  location            = location
-  zones               = availability_zones
+  resource_group_name = var.resource_group_name
+  location            = lvar.ocation
+  zones               = var.availability_zones
   enable_http2        = true
 
   ssl_policy {
@@ -49,7 +49,7 @@ resource "azurerm_application_gateway" "main" {
 
   identity {
     type         = "UserAssigned"
-    identity_ids = [appgateway_kv_identity_id]
+    identity_ids = [var.appgateway_kv_identity_id]
   }
 
   sku {
@@ -59,7 +59,7 @@ resource "azurerm_application_gateway" "main" {
 
   gateway_ip_configuration {
     name      = local.gateway_config_name
-    subnet_id = app_gateway_subnet_id
+    subnet_id = var.,app_gateway_subnet_id
   }
 
   # Public IP configuration (required for WAF_v2, but will be blocked by NSG)
@@ -71,7 +71,7 @@ resource "azurerm_application_gateway" "main" {
   # Private IP configuration - primary access via VPN
   frontend_ip_configuration {
     name                          = local.private_frontend_ip_configuration_name
-    subnet_id                     = app_gateway_subnet_id
+    subnet_id                     = var.app_gateway_subnet_id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.0.40.10"
   }
@@ -126,7 +126,7 @@ resource "azurerm_application_gateway" "main" {
     for_each = local.has_ssl_certificate ? [1] : []
     content {
       name                = local.ssl_cert_name
-      key_vault_secret_id = azurerm_key_vault_certificate_secret_id
+      key_vault_secret_id = var.azurerm_key_vault_certificate_secret_id
     }
   }
 

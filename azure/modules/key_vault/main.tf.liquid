@@ -1,8 +1,8 @@
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_user_assigned_identity" "base" {
-  resource_group_name = resource_group_name
-  location            = location
+  resource_group_name = var.resource_group_name
+  location            = var.location
   name                = "{{ project_name }}-{{ environment }}-kv-user"
 }
 
@@ -14,8 +14,8 @@ resource "random_string" "suffix" {
 
 resource "azurerm_key_vault" "kv" {
   name                = "{{ project_name }}-{{ environment }}-kv-${random_string.suffix.result}"
-  resource_group_name = resource_group_name
-  location            = location
+  resource_group_name = var.resource_group_name
+  location            = var.location
   tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name            = "standard"
 
@@ -80,11 +80,11 @@ resource "azurerm_key_vault" "kv" {
 }
 
 resource "azurerm_key_vault_certificate" "ssl" {
-  count        = ssl_certificate_path != null ? 1 : 0
+  count        = var.ssl_certificate_path != null ? 1 : 0
   name         = "{{ project_name }}-{{ environment }}-ssl-certs"
   key_vault_id = azurerm_key_vault.kv.id
 
   certificate {
-    contents = filebase64(ssl_certificate_path)
+    contents = filebase64(var.ssl_certificate_path)
   }
 }

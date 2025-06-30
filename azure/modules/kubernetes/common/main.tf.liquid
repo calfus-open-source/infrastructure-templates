@@ -6,7 +6,7 @@ resource "tls_private_key" "k8s_ssh_key" {
 
 resource "local_sensitive_file" "k8s_private_key" {
   content         = tls_private_key.k8s_ssh_key.private_key_pem
-  filename        = pathexpand("~/.ssh/${var.project_name}-${var.environment}-k8s.pem")
+  filename        = pathexpand("~/.ssh/${{ project_name }}-${{ environment }}-k8s.pem")
   file_permission = "0600"
 }
 

@@ -7,7 +7,7 @@ resource "random_password" "sql_admin_password" {
 
 # Create the SQL Server
 resource "azurerm_mssql_server" "sql_server" {
-  name                         = "${var.project_name}-${var.environment}-sql-server"
+  name                         = "${{ project_name }}-${{ var.environment }}-sql-server"
   resource_group_name          = var.resource_group_name
   location                     = var.location
   version                      = var.sql_version
@@ -28,7 +28,7 @@ resource "azurerm_mssql_database" "sql_database" {
   sku_name  = "S0"
 
   tags = merge(var.tags, {
-    Name = "${var.project_name}-${var.environment}-${var.database_name}"
+    Name = "${{ project_name }}-${{ environment }}-${{ database_name }}"
   })
 }
 
