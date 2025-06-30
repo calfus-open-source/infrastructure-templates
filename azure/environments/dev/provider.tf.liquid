@@ -3,28 +3,24 @@ terraform {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
-     }}
+    }
     azuread = {
       source  = "hashicorp/azuread"
       version = "~> 2.53.0"
-     }}
+    }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.6"
-     }
+    }
     cloudinit = {
-      source = "hashicorp/cloudinit"
+      source  = "hashicorp/cloudinit"
       version = "2.3.5"
-     }
-  backend "azurerm" {
-    resource_group_name  = "flexify_calfus"
-    storage_account_name = "flexifycalfus"
-    container_name       = "flexifycalfus"
-    key                  = "dev/terraform.tfstate"
-   }
+    }
+  }
+}
 
 provider "azurerm" {
-  features { }
+  features {}
   resource_provider_registrations = "none"
-  subscription_id                 = subscription_id
- }
+  subscription_id                 = var.subscription_id
+}
