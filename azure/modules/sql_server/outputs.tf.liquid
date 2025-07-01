@@ -1,42 +1,42 @@
 output "sql_server_id" {
   description = "The ID of the SQL Server"
   value       = azurerm_mssql_server.sql_server.id
- }}
+}
 
 output "sql_server_name" {
   description = "The name of the SQL Server"
   value       = azurerm_mssql_server.sql_server.name
- }}
+}
 
 output "sql_server_fqdn" {
   description = "The fully qualified domain name of the SQL Server"
   value       = azurerm_mssql_server.sql_server.fully_qualified_domain_name
- }}
+}
 
 output "sql_database_id" {
   description = "The ID of the SQL Database"
   value       = azurerm_mssql_database.sql_database.id
- }}
+}
 
 output "sql_database_name" {
   description = "The name of the SQL Database"
   value       = azurerm_mssql_database.sql_database.name
- }}
+}
 
 output "sql_admin_username" {
   description = "The administrator username for the SQL Server"
   value       = sql_admin_username
   sensitive   = false
- }}
+}
 
 output "sql_admin_password" {
   description = "The administrator password for the SQL Server"
   value       = sql_admin_password != null ? sql_admin_password : random_password.sql_admin_password[0].result
   sensitive   = true
- }}
+}
 
 output "connection_string" {
   description = "Connection string for the SQL Database"
-  value       = "Server=tcp:{{ azurerm_mssql_server.sql_server.fully_qualified_domain_name }},1433;Initial Catalog={{ azurerm_mssql_database.sql_database.name }};Persist Security Info=False;User ID={{ sql_admin_username }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+  value       = "Server=tcp:${azurerm_mssql_server.sql_server.fully_qualified_domain_name},1433;Initial Catalog=${azurerm_mssql_database.sql_database.name};Persist Security Info=False;User ID=${sql_admin_username};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
   sensitive   = true
- }} 
+}

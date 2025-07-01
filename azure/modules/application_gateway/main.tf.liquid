@@ -59,7 +59,7 @@ resource "azurerm_application_gateway" "main" {
 
   gateway_ip_configuration {
     name      = local.gateway_config_name
-    subnet_id = var.,app_gateway_subnet_id
+    subnet_id = var.app_gateway_subnet_id
   }
 
   # Public IP configuration (required for WAF_v2, but will be blocked by NSG)

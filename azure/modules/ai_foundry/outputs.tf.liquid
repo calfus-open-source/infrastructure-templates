@@ -2,91 +2,91 @@
 output "ai_foundry_hub_id" {
   description = "The ID of the AI Foundry hub"
   value       = azurerm_ai_foundry.ai_foundry_hub.id
- }}
+}
 
 output "ai_foundry_hub_name" {
   description = "The name of the AI Foundry hub"
   value       = azurerm_ai_foundry.ai_foundry_hub.name
- }}
+}
 
 # AI Foundry Project outputs
 output "ai_foundry_project_id" {
   description = "The ID of the AI Foundry project"
   value       = azurerm_ai_foundry_project.ai_foundry_project.id
- }}
+}
 
 output "ai_foundry_project_name" {
   description = "The name of the AI Foundry project"
   value       = azurerm_ai_foundry_project.ai_foundry_project.name
- }}
+}
 
 # AI Services outputs
 output "ai_services_id" {
   description = "The ID of the AI Services account"
   value       = azurerm_ai_services.ai_services.id
- }}
+}
 
 output "ai_services_name" {
   description = "The name of the AI Services account"
   value       = azurerm_ai_services.ai_services.name
- }}
+}
 
 output "ai_services_endpoint" {
   description = "The endpoint URL of the AI Services account"
   value       = azurerm_ai_services.ai_services.endpoint
- }}
+}
 
 output "ai_services_primary_key" {
   description = "The primary access key for the AI Services account"
   value       = azurerm_ai_services.ai_services.primary_access_key
   sensitive   = true
- }}
+}
 
 # Model deployment outputs
 output "gpt4o_deployment_name" {
   description = "The name of the GPT-4o deployment"
   value       = azurerm_cognitive_deployment.gpt4o_deployment.name
- }}
+}
 
 output "o3_mini_deployment_name" {
   description = "The name of the o3-mini deployment"
   value       = azurerm_cognitive_deployment.o3_mini_deployment.name
- }}
+}
 
 output "embedding_deployment_name" {
   description = "The name of the text embedding deployment"
   value       = azurerm_cognitive_deployment.embedding_deployment.name
- }}
+}
 
 # Storage outputs (specialized AI/ML storage)
 output "storage_account_id" {
   description = "The ID of the AI/ML storage account"
   value       = azurerm_storage_account.ai_foundry_storage.id
- }}
+}
 
 output "storage_account_name" {
   description = "The name of the AI/ML storage account"
   value       = azurerm_storage_account.ai_foundry_storage.name
- }}
+}
 
 output "container_registry_id" {
   description = "The ID of the AI container registry"
   value       = azurerm_container_registry.ai_foundry_acr.id
- }}
+}
 
 output "container_registry_login_server" {
   description = "The login server URL for the AI container registry"
   value       = azurerm_container_registry.ai_foundry_acr.login_server
- }}
+}
 
 # Application Insights outputs
 output "application_insights_id" {
   description = "The ID of Application Insights"
   value       = azurerm_application_insights.ai_foundry_insights.id
- }}
+}
 
 output "application_insights_instrumentation_key" {
   description = "The instrumentation key for Application Insights"
   value       = azurerm_application_insights.ai_foundry_insights.instrumentation_key
   sensitive   = true
- }} 
+}

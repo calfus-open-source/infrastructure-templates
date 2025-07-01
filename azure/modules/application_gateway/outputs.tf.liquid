@@ -3,18 +3,18 @@
 #   value = [
 #     for pool in azurerm_application_gateway.main.backend_address_pool : pool.id
 #   ]
-#  }}
+# }
 
 output "application_gateway_id" {
   value = azurerm_application_gateway.main.id
- }}
+}
 
 output "application_gateway_private_ip" {
   description = "The private IP address of the Application Gateway (primary access via VPN)"
-  value = "10.0.40.10"  # Static IP required for WAF_v2
- }}
+  value       = "10.0.40.10"  # Static IP required for WAF_v2
+}
 
 output "application_gateway_public_ip" {
   description = "The public IP address of the Application Gateway (blocked by NSG rules)"
-  value = azurerm_public_ip.app_gateway_ip.ip_address
- }}
+  value       = azurerm_public_ip.app_gateway_ip.ip_address
+}
