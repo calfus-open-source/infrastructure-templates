@@ -7,7 +7,7 @@ resource "random_password" "sql_admin_password" {
 
 # Create the SQL Server
 resource "azurerm_mssql_server" "sql_server" {
-  name                         = "${{ project_name }}-${{ var.environment }}-sql-server"
+  name                         = "{{ project_name }}-{{ var.environment }}-sql-server"
   resource_group_name          = var.resource_group_name
   location                     = var.location
   version                      = var.sql_version
@@ -17,7 +17,7 @@ resource "azurerm_mssql_server" "sql_server" {
   public_network_access_enabled = var.public_network_access_enabled
 
   tags = merge(var.tags, {
-    Name = "${var.project_name}-${var.environment}-sql-server"
+    Name = "{{ project_name }}-{{ var.environment }}-sql-server"
   })
 }
 

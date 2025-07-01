@@ -51,7 +51,7 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {
   }
 
   tags = merge(
-    tags,
+    var.tags,
     {}
   )
 }
@@ -86,7 +86,7 @@ resource "azurerm_role_assignment" "agic_app_gateway_contributor" {
 
 # AGIC requires Managed Identity Operator access to the Key Vault user-assigned identity
 resource "azurerm_role_assignment" "agic_managed_identity_operator" {
-  scope                = kv_user_assigned_identity_id
+  scope                = var.kv_user_assigned_identity_id
   role_definition_name = "Managed Identity Operator"
   principal_id         = azurerm_kubernetes_cluster.aks_cluster.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
 }

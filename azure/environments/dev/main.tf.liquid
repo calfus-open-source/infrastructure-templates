@@ -125,7 +125,7 @@ module "sql_server" {
  }
 
 module "vpn_gateway" {
-  count               = enable_vpn_gateway ? 1 : 0
+  count               = var.enable_vpn_gateway ? 1 : 0
   source              = "./modules/vpn_gateway"
   project_name        = var.project_name
   environment         = var.environment

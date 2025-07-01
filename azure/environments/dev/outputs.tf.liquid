@@ -36,37 +36,37 @@ output "application_gateway_public_ip" {
 
 output "vpn_gateway_public_ip" {
   description = "The public IP address of the VPN Gateway"
-  value       = enable_vpn_gateway ? module.vpn_gateway[0].vpn_gateway_public_ip : null
+  value       = var.enable_vpn_gateway ? module.vpn_gateway[0].vpn_gateway_public_ip : null
  }
 
 output "vpn_client_address_space" {
   description = "The address space for VPN clients"
-  value       = enable_vpn_gateway ? module.vpn_gateway[0].vpn_client_address_space : null
+  value       = var.enable_vpn_gateway ? module.vpn_gateway[0].vpn_client_address_space : null
  }
 
 output "frontend_private_subnet_id" {
   description = "The ID of the frontend private subnet"
-  value       = enable_vpn_gateway ? module.vpn_gateway[0].frontend_private_subnet_id : null
+  value       = var.enable_vpn_gateway ? module.vpn_gateway[0].frontend_private_subnet_id : null
  }
 
 # AI Foundry outputs
 output "ai_services_endpoint" {
   description = "The endpoint URL of the AI Services account"
-  value       = enable_ai_foundry ? module.ai_foundry.ai_services_endpoint : null
+  value       = var.enable_ai_foundry ? module.ai_foundry.ai_services_endpoint : null
  }
 
 output "ai_services_primary_key" {
   description = "The primary access key for the AI Services account"
-  value       = enable_ai_foundry ? module.ai_foundry.ai_services_primary_key : null
+  value       = var.enable_ai_foundry ? module.ai_foundry.ai_services_primary_key : null
   sensitive   = true
  }
 
 output "ai_foundry_hub_name" {
   description = "The name of the AI Foundry hub"
-  value       = enable_ai_foundry ? module.ai_foundry.ai_foundry_hub_name : null
+  value       = var.enable_ai_foundry ? module.ai_foundry.ai_foundry_hub_name : null
  }
 
 output "gpt4o_deployment_name" {
   description = "The name of the GPT-4o deployment"
-  value       = enable_ai_foundry ? module.ai_foundry.gpt4o_deployment_name : null
+  value       = var.enable_ai_foundry ? module.ai_foundry.gpt4o_deployment_name : null
  }

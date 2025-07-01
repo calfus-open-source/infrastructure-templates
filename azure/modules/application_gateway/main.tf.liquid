@@ -38,7 +38,7 @@ locals {
 resource "azurerm_application_gateway" "main" {
   name                = "${local.prefix}-appgw"
   resource_group_name = var.resource_group_name
-  location            = lvar.ocation
+  location            = var.location
   zones               = var.availability_zones
   enable_http2        = true
 

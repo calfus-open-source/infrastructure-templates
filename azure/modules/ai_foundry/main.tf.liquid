@@ -12,7 +12,7 @@ resource "azurerm_application_insights" "ai_foundry_insights" {
 }
 
 resource "azurerm_storage_account" "ai_foundry_storage" {
-  name                     = "{{ project_name | replace: '-', '' }}{{ environment }}aistorage"
+  name                     = "{{ project_name | replace: '-', '' | downcase }}{{ environment | replace: '-', '' | downcase }}aistorage"
   resource_group_name      = var.resource_group_name
   location                 = var.location
   account_tier             = "Standard"
@@ -32,7 +32,7 @@ resource "azurerm_storage_account" "ai_foundry_storage" {
 }
 
 resource "azurerm_container_registry" "ai_foundry_acr" {
-  name                = "{{ project_name | replace: '-', '' }}{{ environment }}aiacr"
+  name                = "{{ project_name | replace: '-', '' | downcase }}{{ environment | replace: '-', '' | downcase }}aiacr"
   resource_group_name = var.resource_group_name
   location            = var.location
   sku                 = "Standard"
