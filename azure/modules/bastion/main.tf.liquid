@@ -10,7 +10,7 @@ resource "azurerm_public_ip" "bastion_public_ip" {
     create_before_destroy = true
   }
 
-  tags = tags
+  tags = var.tags
 }
 
 # Network Interface for the bastion host

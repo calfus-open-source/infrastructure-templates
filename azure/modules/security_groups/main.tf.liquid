@@ -84,10 +84,10 @@ resource "azurerm_network_security_group" "k8s_vm_sg" {
 
 resource "azurerm_network_security_group" "bastion_nsg" {
   name                = "{{ project_name }}-{{ environment }}-bastion-nsg"
-  location            = "{{ location }}"
-  resource_group_name = "{{ resource_group_name }}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
   tags = merge(
-    {% if tags %}{{ tags | json }}{% else %}{}{% endif %},
+    {% if var.tags %}{{ tags | json }}{% else %}{}{% endif %},
     {
       "Name" = "Bastion NSG"
     }
@@ -108,8 +108,8 @@ resource "azurerm_network_security_group" "bastion_nsg" {
 
 resource "azurerm_network_security_group" "app_gateway_nsg" {
   name                = "{{ project_name }}-{{ environment }}-app-gateway-nsg"
-  location            = "{{ location }}"
-  resource_group_name = "{{ resource_group_name }}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
   tags                = {% if tags %}{{ tags | json }}{% else %}{}{% endif %}
 
   security_rule {

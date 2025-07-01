@@ -11,11 +11,11 @@ module "vnet" {
   subnet_prefix_length        = var.subnet_prefix_length
   public_ip_sku               = var.public_ip_sku
   tags                        = var.tags
-  bastion_nsg_id              = var.module.nsg.bastion_nsg_id
+  bastion_nsg_id              = module.nsg.bastion_nsg_id
   app_gateway_subnet_offset   = var.app_gateway_subnet_offset
-  app_gateway_nsg_id          = var.module.nsg.app_gateway_nsg_id
-  k8s_asg_id                  = var.module.nsg.k8s_asg_id
-  k8s_vm_nsg_id               = var.module.nsg.k8s_vm_nsg_id
+  app_gateway_nsg_id          = module.nsg.app_gateway_nsg_id
+  k8s_asg_id                  = module.nsg.k8s_asg_id
+  k8s_vm_nsg_id               = module.nsg.k8s_vm_nsg_id
   k8s_private_subnet_offset   = var.k8s_private_subnet_offset
   public_subnet_offset        = var.public_subnet_offset 
  }
@@ -104,7 +104,7 @@ module "aks" {
   app_gateway_id                   = module.agw.application_gateway_id
   kv_user_assigned_identity_id     = module.kv.kv_access_identity
   app_gateway_subnet_id            = module.vnet.app_gateway_subnet_id
-  tags = tags
+  tags = var.tags
  }
 
 module "sql_server" {

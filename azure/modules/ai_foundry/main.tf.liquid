@@ -6,7 +6,7 @@ resource "azurerm_application_insights" "ai_foundry_insights" {
   application_type    = "web"
   retention_in_days   = 30
 
-  tags = merge({{ tags }}, {
+  tags = merge(var.tags, {
     Name = "{{ project_name }}-{{ environment }}-ai-insights"
   })
 }
@@ -89,7 +89,7 @@ resource "azurerm_ai_foundry_project" "ai_foundry_project" {
     type = "SystemAssigned"
   }
 
-  tags = merge(var.tags {
+  tags = merge(var.tags, {
     Name = "{{ project_name }}-{{ environment }}-ai-project"
   })
 
