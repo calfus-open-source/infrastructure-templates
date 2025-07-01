@@ -1,0 +1,9 @@
+resource "azurerm_container_registry" "this" {
+  for_each            = toset(var.acr_repo_names)
+  name                = each.key
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  sku                 = "Basic"
+  admin_enabled       = false
+  tags                = var.tags
+ }

@@ -1,0 +1,58 @@
+# Generate a random password if none is provided
+resource "random_password" "sql_admin_password" {
+  count   = var.sql_admin_password == null ? 1 : 0
+  length  = 16
+  special = true
+}
+
+# Create the SQL Server
+resource "azurerm_mssql_server" "sql_server" {
+  name                         = "{{ project_name }}-{{ var.environment }}-sql-server"
+  resource_group_name          = var.resource_group_name
+  location                     = var.location
+  version                      = var.sql_version
+  administrator_login          = var.sql_admin_username
+  administrator_login_password = var.sql_admin_password != null ? var.sql_admin_password : random_password.sql_admin_password[0].result
+  minimum_tls_version          = var.min_tls_version
+  public_network_access_enabled = var.public_network_access_enabled
+
+  tags = merge(var.tags, {
+    Name = "{{ project_name }}-{{ var.environment }}-sql-server"
+  })
+}
+
+# Create the SQL Database
+resource "azurerm_mssql_database" "sql_database" {
+  name      = var.database_name
+  server_id = azurerm_mssql_server.sql_server.id
+  sku_name  = "S0"
+
+  tags = merge(var.tags, {
+    Name = "${{ project_name }}-${{ environment }}-${{ database_name }}"
+  })
+}
+
+# Create firewall rules
+resource "azurerm_mssql_firewall_rule" "firewall_rules" {
+  count            = length(var.firewall_rules)
+  name             = var.firewall_rules[count.index].name
+  server_id        = azurerm_mssql_server.sql_server.id
+  start_ip_address = var.firewall_rules[count.index].start_ip_address
+  end_ip_address   = var.firewall_rules[count.index].end_ip_address
+}
+
+# Allow Azure services to access the server
+resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
+  name             = "AllowAzureServices"
+  server_id        = azurerm_mssql_server.sql_server.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "0.0.0.0"
+}
+
+# Create virtual network rules for subnet access
+resource "azurerm_mssql_virtual_network_rule" "vnet_rules" {
+  count     = length(var.allowed_subnet_ids)
+  name      = "vnet-rule-${count.index}"
+  server_id = azurerm_mssql_server.sql_server.id
+  subnet_id = var.allowed_subnet_ids[count.index]
+}

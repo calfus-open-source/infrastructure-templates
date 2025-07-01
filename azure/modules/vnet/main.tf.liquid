@@ -1,0 +1,94 @@
+resource "azurerm_virtual_network" "this" {
+  name                = "{{ project_name }}-{{ environment }}-vnet"
+  address_space       = var.vnet_address_space
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tags                = var.tags
+}
+
+resource "azurerm_network_interface" "private_nic" {
+  name                = "{{ project_name }}-{{ environment }}-private-nic"
+  resource_group_name = var.resource_group_name
+  location            = var.location
+
+  ip_configuration {
+    name                          = "{{ project_name }}-{{ environment }}-private-nic"
+    subnet_id                     = azurerm_subnet.k8s_private_subnet.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+resource "azurerm_subnet_route_table_association" "k8s_private_rt_assoc" {
+  subnet_id      = azurerm_subnet.k8s_private_subnet.id
+  route_table_id = azurerm_route_table.private_rt.id
+}
+
+resource "azurerm_subnet_network_security_group_association" "k8s_private_subnet_nsg_association" {
+  subnet_id                 = azurerm_subnet.k8s_private_subnet.id
+  network_security_group_id = var.k8s_vm_nsg_id
+}
+
+resource "azurerm_subnet_network_security_group_association" "public_subnet_nsg_association" {
+  subnet_id                 = azurerm_subnet.public.id
+  network_security_group_id = var.bastion_nsg_id
+}
+
+resource "azurerm_subnet_network_security_group_association" "app_gateway_subnet_nsg_association" {
+  subnet_id                 = azurerm_subnet.app_gateway_subnet.id
+  network_security_group_id = var.app_gateway_nsg_id
+}
+
+resource "azurerm_nat_gateway" "this" {
+  name                = "{{ project_name }}-{{ environment }}-nat-gw"
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  sku_name            = "Standard"
+  tags                = var.tags
+}
+
+resource "azurerm_public_ip" "nat_gateway_ip" {
+  name                = "{{ project_name }}-{{ environment }}-nat-pip"
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  allocation_method   = var.public_ip_allocation_method
+  sku                 = var.public_ip_sku
+  tags                = var.tags
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "this" {
+  nat_gateway_id       = azurerm_nat_gateway.this.id
+  public_ip_address_id = azurerm_public_ip.nat_gateway_ip.id
+}
+
+resource "azurerm_subnet_nat_gateway_association" "public" {
+  subnet_id      = azurerm_subnet.public.id
+  nat_gateway_id = azurerm_nat_gateway.this.id
+}
+
+resource "azurerm_route_table" "private_rt" {
+  name                = "{{ project_name }}-{{ environment }}-private-rt"
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  tags                = var.tags
+}
+
+resource "azurerm_route" "private_route" {
+  name                   = "private-to-internet"
+  resource_group_name    = var.resource_group_name
+  route_table_name       = azurerm_route_table.private_rt.name
+  address_prefix         = "0.0.0.0/0"
+  next_hop_type          = "Internet"
+}
+
+resource "azurerm_network_interface_security_group_association" "k8s_private_private_nic_nsg" {
+  network_interface_id      = azurerm_network_interface.private_nic.id
+  network_security_group_id = var.k8s_vm_nsg_id
+}
+
+resource "azurerm_network_interface_application_security_group_association" "k8s_private_private_nic_asg" {
+  network_interface_id          = azurerm_network_interface.private_nic.id
+  application_security_group_id = var.k8s_asg_id
+}

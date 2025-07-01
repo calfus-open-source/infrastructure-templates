@@ -1,0 +1,91 @@
+# Create a public IP for the Bastion Host
+resource "azurerm_public_ip" "bastion_public_ip" {
+  name                = "{{ project_name }}-{{ environment }}-bastion-ip"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  allocation_method   = var.bastion_public_ip_allocation_method
+  sku                 = var.bastion_public_ip_sku
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = var.tags
+}
+
+# Network Interface for the bastion host
+resource "azurerm_network_interface" "bastion_nic" {
+  name                = "{{ project_name }}-{{ environment }}-bastion-nic"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+
+  ip_configuration {
+    name                          = "{{ project_name }}-{{ environment }}-bastion-nic-ipconfig"
+    subnet_id                     = var.bastion_subnet_id
+    private_ip_address_allocation = var.bastion_private_ip_address_allocation
+    public_ip_address_id          = azurerm_public_ip.bastion_public_ip.id
+  }
+
+  depends_on = [
+    azurerm_public_ip.bastion_public_ip,
+    var.bastion_nsg_id
+  ]
+
+  tags = var.tags
+}
+
+# Associate the NSG with the bastion network interface
+resource "azurerm_network_interface_security_group_association" "bastion_nic_nsg" {
+  network_interface_id      = azurerm_network_interface.bastion_nic.id
+  network_security_group_id = var.bastion_nsg_id
+}
+
+# Associate the ASG with the Bastion Network Interface
+resource "azurerm_network_interface_application_security_group_association" "bastion_nic_asg" {
+  network_interface_id          = azurerm_network_interface.bastion_nic.id
+  application_security_group_id = var.bastion_asg_id
+}
+
+# Bastion Host Virtual Machine
+resource "azurerm_linux_virtual_machine" "bastion_vm" {
+  name                  = "{{ project_name }}-{{ environment }}-bastion-vm"
+  location              = var.location
+  resource_group_name   = var.resource_group_name
+  network_interface_ids = [azurerm_network_interface.bastion_nic.id]
+  size                  = var.bastion_vm_size
+
+  os_disk {
+    name                 = "{{ project_name }}-{{ environment }}-bastion-vm-osdisk"
+    caching              = var.bastion_os_disk_caching
+    storage_account_type = var.bastion_os_disk_storage_account_type
+    disk_size_gb         = var.bastion_os_disk_size
+  }
+
+  source_image_reference {
+    publisher = var.image_publisher
+    offer     = var.image_offer
+    sku       = var.image_sku
+    version   = var.image_version
+  }
+
+  computer_name  = "bastion-{{ environment }}"
+  admin_username = var.bastion_admin_username
+
+  admin_ssh_key {
+    username   = var.bastion_admin_username
+    public_key = tls_private_key.bastion_ssh_key.public_key_openssh
+  }
+
+  depends_on = [
+    azurerm_network_interface.bastion_nic,
+    azurerm_network_interface_application_security_group_association.bastion_nic_asg
+  ]
+
+  tags = merge(
+    {
+      "Environment" = var.environment,
+      "Group"       = "bastion"
+    },
+    var.tags
+  )
+}
