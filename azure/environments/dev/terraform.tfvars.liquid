@@ -1,5 +1,5 @@
 ####################### Common Variables #######################
-subscription_id            = "{{ azure_subscription_id }}"
+subscription_id            = "{{ subscriptionId }}"
 project_name               = "{{ project_name }}"
 environment                = "{{ environment }}"
 location                   = "{{ azure_location }}"
@@ -49,3 +49,10 @@ openai_location = "{{ azure_location }}"
 gpt4o_capacity = 100
 o3_mini_capacity = 100  
 embedding_capacity = 50
+
+####################### Version Control Variables #######################
+
+github_access_token = "{{ github_access_token }}"
+github_owner = "{{ github_owner }}"
+appType = ["{{ frontend_app_type }}", "{{ backend_app_type }}", "keycloak-service", "auth-service", "gen-ai-service"]
+{% endif %}

@@ -60,19 +60,19 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {
 resource "azurerm_role_assignment" "aks_acr_role_assignment" {
   principal_id         = azurerm_kubernetes_cluster.aks_cluster.identity[0].principal_id
   role_definition_name = "AcrPull"
-  scope                = "/subscriptions/{{ data.azurerm_client_config.current.subscription_id }}/resourceGroups/var.common_resource_group_name"
+  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.common_resource_group_name}"
 }
 
 # Grant Reader access to the current user for the AKS managed resource group
 resource "azurerm_role_assignment" "aks_managed_rg_reader" {
-  scope                = "/subscriptions/{{ data.azurerm_client_config.current.subscription_id }}/resourceGroups/{{ azurerm_kubernetes_cluster.aks_cluster.node_resource_group }}"
+  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_kubernetes_cluster.aks_cluster.node_resource_group}"
   role_definition_name = "Reader"
   principal_id         = data.azurerm_client_config.current.object_id
 }
 
 # AGIC requires Reader access to the resource group containing the Application Gateway
 resource "azurerm_role_assignment" "agic_resource_group_reader" {
-  scope                = "/subscriptions/{{ data.azurerm_client_config.current.subscription_id }}/resourceGroups/var.resource_group_name"
+  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.resource_group_name}"
   role_definition_name = "Reader"
   principal_id         = azurerm_kubernetes_cluster.aks_cluster.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
 }

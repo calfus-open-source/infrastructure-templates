@@ -43,13 +43,12 @@ resource "azurerm_container_registry" "ai_foundry_acr" {
   })
 }
 
-# Create Azure AI Services
 resource "azurerm_ai_services" "ai_services" {
-  name                  = "{{ project_name | replace: '-', '' }}{{ environment }}aiservices"
+  name                  = "{{ project_name | replace: '-', '' | downcase }}{{ environment | replace: '-', '' | downcase }}aiservices"
   location              = var.openai_location
   resource_group_name   = var.resource_group_name
   sku_name              = "S0"
-  custom_subdomain_name = "{{ project_name | replace: '-', '' }}{{ environment }}aiservices"
+  custom_subdomain_name = "{{ project_name | replace: '-', '' | downcase }}{{ environment | replace: '-', '' | downcase }}aiservices"
 
   tags = merge(var.tags, {
     Name = "{{ project_name }}-{{ environment }}-ai-services"

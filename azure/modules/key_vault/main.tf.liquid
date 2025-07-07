@@ -13,7 +13,7 @@ resource "random_string" "suffix" {
 }
 
 resource "azurerm_key_vault" "kv" {
-  name                = "{{ project_name }}-{{ environment }}-kv-${random_string.suffix.result}"
+  name                = "{{ project_name }}-kv-${random_string.suffix.result}"
   resource_group_name = var.resource_group_name
   location            = var.location
   tenant_id           = data.azurerm_client_config.current.tenant_id
