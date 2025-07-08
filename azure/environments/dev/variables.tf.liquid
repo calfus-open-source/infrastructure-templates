@@ -96,11 +96,11 @@ variable "sql_firewall_rules" {
 #   default     = {% if gateway_subnet_address_prefix %}{{ gateway_subnet_address_prefix | json }}{% else %}"10.0.60.0/24"{% endif %}
 # }
 
-# variable "vpn_client_address_space" {
-#   description = "The address space for VPN clients"
-#   type        = list(string)
-#   default     = {% if vpn_client_address_space %}{{ vpn_client_address_space | json }}{% else %}["10.1.0.0/24"]{% endif %}
-# }
+ variable "vpn_client_address_space" {
+   description = "The address space for VPN clients"
+   type        = list(string)
+   default     = {% if vpn_client_address_space %}{{ vpn_client_address_space | json }}{% else %}["10.1.0.0/24"]{% endif %}
+  }
 
 ####################### vnet variables #######################
 
