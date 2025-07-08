@@ -123,41 +123,41 @@ module "sql_server" {
     module.vnet.public_subnet_id
   ]
  }
+ 
+# module "vpn_gateway" {
+#   count                        = var.enable_vpn_gateway ? 1 : 0
+#   source                       = "./modules/vpn_gateway"
+#   project_name                 = var.project_name
+#   environment                  = var.environment
+#   location                     = var.location
+#   resource_group_name          = var.resource_group_name
+#   availability_zones           = var.availability_zones
+#   tags                         = var.tags
+#   virtual_network_id           = module.vnet.vnet_id
+#   gateway_subnet_address_prefix = var.gateway_subnet_address_prefix
+#   vpn_client_address_space     = var.vpn_client_address_space
+#   frontend_private_nsg_id      = module.nsg.frontend_private_nsg_id
+#   vnet_address_space           = var.vnet_address_space
+#   subnet_prefix_length         = var.subnet_prefix_length
+#   k8s_private_subnet_offset    = var.k8s_private_subnet_offset
+#   frontend_subnet_offset       = var.frontend_subnet_offset
+# }
 
-module "vpn_gateway" {
-  count               = var.enable_vpn_gateway ? 1 : 0
-  source              = "./modules/vpn_gateway"
-  project_name        = var.project_name
-  environment         = var.environment
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  availability_zones  = var.availability_zones
-  tags                = var.tags
-  virtual_network_id  = module.vnet.vnet_id
-  gateway_subnet_address_prefix = var.gateway_subnet_address_prefix
-  vpn_client_address_space     = var.vpn_client_address_space
-  frontend_private_nsg_id      = module.nsg.frontend_private_nsg_id
-  vnet_address_space           = var.vnet_address_space
-  subnet_prefix_length         = var.subnet_prefix_length
-  k8s_private_subnet_offset    = var.k8s_private_subnet_offset
-  frontend_subnet_offset       = var.frontend_subnet_offset
- }
-
-module "ai_foundry" {
-  source = "./modules/ai_foundry"
-
-  project_name              = var.project_name
-  environment               = var.environment
-  location                  = var.location
-  resource_group_name       = var.resource_group_name
-  openai_location           = var.openai_location
-  gpt4o_capacity            = var.gpt4o_capacity
-  o3_mini_capacity          = var.o3_mini_capacity
-  embedding_capacity        = var.embedding_capacity
-  existing_key_vault_id     = module.kv.key_vault_id
-
-  tags = var.tags
- }
+# module "ai_foundry" {
+#   source = "./modules/ai_foundry"
+#
+#   project_name              = var.project_name
+#   environment               = var.environment
+#   location                  = var.location
+#   resource_group_name       = var.resource_group_name
+#   openai_location           = var.openai_location
+#   gpt4o_capacity            = var.gpt4o_capacity
+#   o3_mini_capacity          = var.o3_mini_capacity
+#   embedding_capacity        = var.embedding_capacity
+#   existing_key_vault_id     = module.kv.key_vault_id
+#
+#   tags = var.tags
+# }
 
 module "gitops" {
     source       = "./modules/gitops"

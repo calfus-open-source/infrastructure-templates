@@ -84,23 +84,23 @@ variable "sql_firewall_rules" {
 
 ####################### vpn gateway variables #######################
 
-variable "enable_vpn_gateway" {
-  description = "Whether to enable VPN Gateway"
-  type        = bool
-  default     = {% if enable_vpn_gateway %}{{ enable_vpn_gateway | json }}{% else %}true{% endif %}
-}
+# variable "enable_vpn_gateway" {
+#   description = "Whether to enable VPN Gateway"
+#   type        = bool
+#   default     = {% if enable_vpn_gateway %}{{ enable_vpn_gateway | json }}{% else %}true{% endif %}
+# }
 
-variable "gateway_subnet_address_prefix" {
-  description = "The address prefix for the Gateway subnet"
-  type        = string
-  default     = {% if gateway_subnet_address_prefix %}{{ gateway_subnet_address_prefix | json }}{% else %}"10.0.60.0/24"{% endif %}
-}
+# variable "gateway_subnet_address_prefix" {
+#   description = "The address prefix for the Gateway subnet"
+#   type        = string
+#   default     = {% if gateway_subnet_address_prefix %}{{ gateway_subnet_address_prefix | json }}{% else %}"10.0.60.0/24"{% endif %}
+# }
 
-variable "vpn_client_address_space" {
-  description = "The address space for VPN clients"
-  type        = list(string)
-  default     = {% if vpn_client_address_space %}{{ vpn_client_address_space | json }}{% else %}["10.1.0.0/24"]{% endif %}
-}
+# variable "vpn_client_address_space" {
+#   description = "The address space for VPN clients"
+#   type        = list(string)
+#   default     = {% if vpn_client_address_space %}{{ vpn_client_address_space | json }}{% else %}["10.1.0.0/24"]{% endif %}
+# }
 
 ####################### vnet variables #######################
 
@@ -236,35 +236,35 @@ variable "source_bastion_ip" {
 
 ####################### ai foundry variables #######################
 
-variable "enable_ai_foundry" {
-  description = "Whether to enable Azure AI Foundry"
-  type        = bool
-  default     = {% if enable_ai_foundry %}{{ enable_ai_foundry | json }}{% else %}false{% endif %}
-}
+# variable "enable_ai_foundry" {
+#   description = "Whether to enable Azure AI Foundry"
+#   type        = bool
+#   default     = {% if enable_ai_foundry %}{{ enable_ai_foundry | json }}{% else %}false{% endif %}
+# }
 
-variable "openai_location" {
-  description = "The Azure location for OpenAI service (limited regions)"
-  type        = string
-  default     = {% if openai_location %}{{ openai_location | json }}{% else %}"East US"{% endif %}
-}
+# variable "openai_location" {
+#   description = "The Azure location for OpenAI service (limited regions)"
+#   type        = string
+#   default     = {% if openai_location %}{{ openai_location | json }}{% else %}"East US"{% endif %}
+# }
 
-variable "gpt4o_capacity" {
-  description = "The capacity for GPT-4o deployment (tokens per minute)"
-  type        = number
-  default     = {% if gpt4o_capacity %}{{ gpt4o_capacity | json }}{% else %}100{% endif %}
-}
+# variable "gpt4o_capacity" {
+#   description = "The capacity for GPT-4o deployment (tokens per minute)"
+#   type        = number
+#   default     = {% if gpt4o_capacity %}{{ gpt4o_capacity | json }}{% else %}100{% endif %}
+# }
 
-variable "o3_mini_capacity" {
-  description = "The capacity for o3-mini deployment (tokens per minute)"
-  type        = number
-  default     = {% if o3_mini_capacity %}{{ o3_mini_capacity | json }}{% else %}100{% endif %}
-}
+# variable "o3_mini_capacity" {
+#   description = "The capacity for o3-mini deployment (tokens per minute)"
+#   type        = number
+#   default     = {% if o3_mini_capacity %}{{ o3_mini_capacity | json }}{% else %}100{% endif %}
+# }
 
-variable "embedding_capacity" {
-  description = "The capacity for text embedding deployment (tokens per minute)"
-  type        = number
-  default     = {% if embedding_capacity %}{{ embedding_capacity | json }}{% else %}50{% endif %}
-}
+# variable "embedding_capacity" {
+#   description = "The capacity for text embedding deployment (tokens per minute)"
+#   type        = number
+#   default     = {% if embedding_capacity %}{{ embedding_capacity | json }}{% else %}50{% endif %}
+# }
 
 ####################### version control variables #######################
 

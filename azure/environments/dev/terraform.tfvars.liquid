@@ -4,8 +4,8 @@ project_name               = "{{ project_name }}"
 environment                = "{{ environment }}"
 location                   = "{{ azure_location }}"
 domain_name                = "{{ domain }}"
-resource_group_name        = "calfus"
-common_resource_group_name = "calfus"
+resource_group_name        = "{{ resource_group_name }}"
+common_resource_group_name = "{{ resource_group_name }}"
 # Disable availability zones for West US compatibility
 availability_zones         = []
 tags = {
@@ -39,20 +39,19 @@ frontend_subnet_offset    = 50
 source_bastion_ip = [ "27.107.44.50/32", "58.84.60.45/32", "58.84.62.238/32" ]
 
 ####################### VPN Gateway Configuration #######################
-enable_vpn_gateway = true
-gateway_subnet_address_prefix = "10.0.60.0/24"
-vpn_client_address_space = ["10.1.0.0/24"]
+# enable_vpn_gateway = true
+# gateway_subnet_address_prefix = "10.0.60.0/24"
+# vpn_client_address_space = ["10.1.0.0/24"]
 
 ####################### AI Foundry Variables #######################
-enable_ai_foundry = true
-openai_location = "{{ azure_location }}"
-gpt4o_capacity = 100
-o3_mini_capacity = 100  
-embedding_capacity = 50
+# enable_ai_foundry = true
+# openai_location = "Eest US"
+# gpt4o_capacity = 50
+# o3_mini_capacity = 20  
+# embedding_capacity = 50
 
 ####################### Version Control Variables #######################
 
 github_access_token = "{{ github_access_token }}"
 github_owner = "{{ github_owner }}"
 appType = ["{{ frontend_app_type }}", "{{ backend_app_type }}", "keycloak-service", "auth-service", "gen-ai-service"]
-{% endif %}
