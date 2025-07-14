@@ -20,6 +20,7 @@ variable "project_name" {
 }
 
 variable "acr_repo_names" {
-  description = "List of repository names for ACR."
+  description = "List of ACR registry names to create"
   type        = list(string)
+  default     = []
 }

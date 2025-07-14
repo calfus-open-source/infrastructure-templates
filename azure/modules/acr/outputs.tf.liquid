@@ -4,10 +4,20 @@ output "acr_repo_ids" {
 }
 
 output "acr_repo_names" {
-  value = acr_repo_names
+  value = var.acr_repo_names
 }
 
 # Output ACR login servers
 output "acr_login_servers" {
   value = [for r in azurerm_container_registry.this : r.login_server]
+}
+
+
+# Output ACR registries map for easy access
+output "acr_registries" {
+  value = { for name, r in azurerm_container_registry.this : name => {
+    id           = r.id
+    name         = r.name
+    login_server = r.login_server
+  }}
 }

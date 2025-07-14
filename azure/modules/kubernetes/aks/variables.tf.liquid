@@ -10,7 +10,7 @@ variable "environment" {
 }
 
 variable "common_resource_group_name" {
-  description = "The name of the common resource group where ACR repos are created."
+  description = "The name of the common resource group where acr repos are created."
   type        = string
 }
 
@@ -25,17 +25,14 @@ variable "resource_group_name" {
 }
 
 variable "aks_subnet_id" {
-  description = "The ID of the AKS subnet"
   type        = string
 }
 
 variable "k8s_ssh_key" {
-  description = "The SSH public key used for AKS cluster login"
   type        = string
 }
 
 variable "app_gateway_id" {
-  description = "The ID of the Application Gateway"
   type        = string
 }
 
@@ -52,4 +49,14 @@ variable "app_gateway_subnet_id" {
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
+}
+
+variable "acr_registries" {
+  description = "Map of ACR registries with their IDs and login servers"
+  type = map(object({
+    id           = string
+    name         = string
+    login_server = string
+  }))
+  default = {}
 }

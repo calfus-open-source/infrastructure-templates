@@ -56,12 +56,19 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {
   )
 }
 
-# Assign ACRPull Role to the AKS Cluster's Managed Identity
+# Assign ACRPull Role to the AKS Cluster's Managed Identity for each ACR
 resource "azurerm_role_assignment" "aks_acr_role_assignment" {
+  for_each             = var.acr_registries
   principal_id         = azurerm_kubernetes_cluster.aks_cluster.identity[0].principal_id
   role_definition_name = "AcrPull"
-  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.common_resource_group_name}"
+  scope                = each.value.id
+  
+  # Ensure AKS cluster is fully ready before creating role assignments
+  depends_on = [
+    azurerm_kubernetes_cluster.aks_cluster
+  ]
 }
+
 
 # Grant Reader access to the current user for the AKS managed resource group
 resource "azurerm_role_assignment" "aks_managed_rg_reader" {
@@ -96,4 +103,10 @@ resource "azurerm_role_assignment" "agic_subnet_network_contributor" {
   scope                = var.app_gateway_subnet_id
   role_definition_name = "Network Contributor"
   principal_id         = azurerm_kubernetes_cluster.aks_cluster.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
+}
+
+# OUTPUT: AKS Client Certificate
+output "client_certificate" {
+  value     = azurerm_kubernetes_cluster.aks_cluster.kube_config[0].client_certificate
+  sensitive = true
 }

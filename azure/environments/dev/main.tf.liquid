@@ -92,6 +92,15 @@ module "k8s_common" {
   environment                       = var.environment
  }
 
+module "acr" {
+  source              = "./modules/acr"
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  project_name        = var.project_name
+  acr_repo_names      = var.acr_repo_names
+  tags                = var.tags
+}
+
 module "aks" {
   source                           = "./modules/kubernetes/aks"
   project_name                     = var.project_name
@@ -104,8 +113,10 @@ module "aks" {
   app_gateway_id                   = module.agw.application_gateway_id
   kv_user_assigned_identity_id     = module.kv.kv_access_identity
   app_gateway_subnet_id            = module.vnet.app_gateway_subnet_id
-  tags = var.tags
- }
+    acr_registries                 = module.acr.acr_registries
+  tags                             = var.tags
+}
+
 
 module "sql_server" {
   source              = "./modules/sql_server"
