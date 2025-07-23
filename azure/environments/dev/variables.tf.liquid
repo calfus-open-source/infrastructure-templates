@@ -1,0 +1,290 @@
+####################### common variables #######################
+
+variable "subscription_id" {
+  description = "The Azure subscription ID"
+  type        = string
+}
+
+variable "project_name" {
+  description = "The project name"
+  type        = string
+}
+
+variable "environment" {
+  description = "The environment (e.g., dev, qa, prod)"
+  type        = string
+}
+
+variable "location" {
+  description = "The Azure location/region"
+  type        = string
+}
+
+variable "resource_group_name" {
+  description = "The name of the resource group"
+  type        = string
+}
+
+variable "tags" {
+  description = "Tags to apply to all resources"
+  type        = map(string)
+}
+
+variable "availability_zones" {
+  description = "List of availability zones to deploy resources into."
+  type        = list(string)
+  default     = {% if availability_zones %}{{ availability_zones | json }}{% else %}["1", "2", "3"]{% endif %}
+}
+
+variable "domain_name" {
+  description = "Domain Name."
+  type        = string
+}
+
+variable "common_resource_group_name" {
+  description = "The name of the common resource group where acr repos are created"
+  type        = string
+}
+
+variable "acr_repo_names" {
+  description = "List of ACR registry names to create"
+  type        = list(string)
+  default     = []
+}
+
+####################### sql server variables #######################
+
+variable "sql_location" {
+  description = "The Azure location/region for SQL Server (can be different from main location)"
+  type        = string
+  default     = {% if sql_location %}{{ sql_location | json }}{% else %}""{% endif %}
+}
+
+variable "sql_admin_username" {
+  description = "The administrator username for the SQL Server"
+  type        = string
+  default     = {% if sql_admin_username %}{{ sql_admin_username | json }}{% else %}"sqladmin"{% endif %}
+}
+
+variable "sql_admin_password" {
+  description = "The administrator password for the SQL Server"
+  type        = string
+  sensitive   = true
+}
+
+variable "database_name" {
+  description = "The name of the database to create"
+  type        = string
+  default     = {% if database_name %}{{ database_name | json }}{% else %}"app_database"{% endif %}
+}
+
+variable "sql_firewall_rules" {
+  description = "List of firewall rules for SQL Server"
+  type = list(object({
+    name             = string
+    start_ip_address = string
+    end_ip_address   = string
+  }))
+  default = {% if sql_firewall_rules %}{{ sql_firewall_rules | json }}{% else %}[]{% endif %}
+}
+
+####################### vpn gateway variables #######################
+
+# variable "enable_vpn_gateway" {
+#   description = "Whether to enable VPN Gateway"
+#   type        = bool
+#   default     = {% if enable_vpn_gateway %}{{ enable_vpn_gateway | json }}{% else %}true{% endif %}
+# }
+
+# variable "gateway_subnet_address_prefix" {
+#   description = "The address prefix for the Gateway subnet"
+#   type        = string
+#   default     = {% if gateway_subnet_address_prefix %}{{ gateway_subnet_address_prefix | json }}{% else %}"10.0.60.0/24"{% endif %}
+# }
+
+ variable "vpn_client_address_space" {
+   description = "The address space for VPN clients"
+   type        = list(string)
+   default     = {% if vpn_client_address_space %}{{ vpn_client_address_space | json }}{% else %}["10.1.0.0/24"]{% endif %}
+  }
+
+####################### vnet variables #######################
+
+variable "vnet_address_space" {
+  description = "The address space for the VNet"
+  type        = list(string)
+  default     = {% if vnet_address_space %}{{ vnet_address_space | json }}{% else %}["10.0.0.0/16"]{% endif %}
+}
+
+variable "subnet_prefix_length" {
+  description = "The prefix length for subnets"
+  type        = number
+  default     = {% if subnet_prefix_length %}{{ subnet_prefix_length | json }}{% else %}8{% endif %}
+}
+
+variable "private_subnet_offset" {
+  description = "Offset for private subnets in the address space"
+  type        = number
+  default     = {% if private_subnet_offset %}{{ private_subnet_offset | json }}{% else %}20{% endif %}
+}
+
+variable "public_subnet_offset" {
+  description = "Offset for public subnets in the address space"
+  type        = number
+  default     = {% if public_subnet_offset %}{{ public_subnet_offset | json }}{% else %}0{% endif %}
+}
+
+variable "app_gateway_subnet_offset" {
+  description = "Offset for the Application Gateway subnet index to ensure no overlap."
+  type        = number
+  default     = {% if app_gateway_subnet_offset %}{{ app_gateway_subnet_offset | json }}{% else %}40{% endif %}
+}
+
+variable "k8s_private_subnet_offset" {
+  description = "Offset for the k8s subnet index to ensure no overlap."
+  type        = number
+  default     = {% if k8s_private_subnet_offset %}{{ k8s_private_subnet_offset | json }}{% else %}30{% endif %}
+}
+
+variable "frontend_subnet_offset" {
+  description = "Offset for the frontend subnet index to ensure no overlap."
+  type        = number
+  default     = {% if frontend_subnet_offset %}{{ frontend_subnet_offset | json }}{% else %}50{% endif %}
+}
+
+variable "public_ip_allocation_method" {
+  description = "The allocation method for public IPs"
+  type        = string
+  default     = {% if public_ip_allocation_method %}{{ public_ip_allocation_method | json }}{% else %}"Static"{% endif %}
+}
+
+variable "public_ip_sku" {
+  description = "The SKU for public IPs"
+  type        = string
+  default     = {% if public_ip_sku %}{{ public_ip_sku | json }}{% else %}"Standard"{% endif %}
+}
+
+####################### bastion variables #######################
+
+variable "bastion_admin_username" {
+  description = "The admin username for the bastion host VM."
+  type        = string
+  default     = {% if bastion_admin_username %}{{ bastion_admin_username | json }}{% else %}"ubuntu"{% endif %}
+}
+
+variable "bastion_vm_size" {
+  description = "The size of the virtual machine."
+  type        = string
+  default     = {% if bastion_vm_size %}{{ bastion_vm_size | json }}{% else %}"Standard_B2ms"{% endif %}
+}
+
+variable "bastion_os_disk_size" {
+  description = "The size of the OS disk in GB."
+  type        = number
+  default     = {% if bastion_os_disk_size %}{{ bastion_os_disk_size | json }}{% else %}30{% endif %}
+}
+
+variable "image_publisher" {
+  description = "The publisher of the image."
+  type        = string
+  default     = {% if image_publisher %}{{ image_publisher | json }}{% else %}"Canonical"{% endif %}
+}
+
+variable "image_offer" {
+  description = "The offer of the image."
+  type        = string
+  default     = {% if image_offer %}{{ image_offer | json }}{% else %}"0001-com-ubuntu-server-jammy"{% endif %}
+}
+
+variable "image_sku" {
+  description = "The SKU of the image."
+  type        = string
+  default     = {% if image_sku %}{{ image_sku | json }}{% else %}"22_04-lts-gen2"{% endif %}
+}
+
+variable "image_version" {
+  description = "The version of the image."
+  type        = string
+  default     = {% if image_version %}{{ image_version | json }}{% else %}"latest"{% endif %}
+}
+
+variable "bastion_public_ip_allocation_method" {
+  type    = string
+  default = {% if bastion_public_ip_allocation_method %}{{ bastion_public_ip_allocation_method | json }}{% else %}"Static"{% endif %}
+}
+
+variable "bastion_public_ip_sku" {
+  type    = string
+  default = {% if bastion_public_ip_sku %}{{ bastion_public_ip_sku | json }}{% else %}"Standard"{% endif %}
+}
+
+variable "bastion_private_ip_address_allocation" {
+  type    = string
+  default = {% if bastion_private_ip_address_allocation %}{{ bastion_private_ip_address_allocation | json }}{% else %}"Dynamic"{% endif %}
+}
+
+variable "bastion_os_disk_caching" {
+  type    = string
+  default = {% if bastion_os_disk_caching %}{{ bastion_os_disk_caching | json }}{% else %}"ReadWrite"{% endif %}
+}
+
+variable "bastion_os_disk_storage_account_type" {
+  type    = string
+  default = {% if bastion_os_disk_storage_account_type %}{{ bastion_os_disk_storage_account_type | json }}{% else %}"Standard_LRS"{% endif %}
+}
+
+####################### security_group variables #######################
+
+variable "source_bastion_ip" {
+  type    = list(string)
+  default = {% if source_bastion_ip %}{{ source_bastion_ip | json }}{% else %}[]{% endif %}
+}
+
+####################### ai foundry variables #######################
+
+# variable "enable_ai_foundry" {
+#   description = "Whether to enable Azure AI Foundry"
+#   type        = bool
+#   default     = {% if enable_ai_foundry %}{{ enable_ai_foundry | json }}{% else %}false{% endif %}
+# }
+
+# variable "openai_location" {
+#   description = "The Azure location for OpenAI service (limited regions)"
+#   type        = string
+#   default     = {% if openai_location %}{{ openai_location | json }}{% else %}"East US"{% endif %}
+# }
+
+# variable "gpt4o_capacity" {
+#   description = "The capacity for GPT-4o deployment (tokens per minute)"
+#   type        = number
+#   default     = {% if gpt4o_capacity %}{{ gpt4o_capacity | json }}{% else %}100{% endif %}
+# }
+
+# variable "o3_mini_capacity" {
+#   description = "The capacity for o3-mini deployment (tokens per minute)"
+#   type        = number
+#   default     = {% if o3_mini_capacity %}{{ o3_mini_capacity | json }}{% else %}100{% endif %}
+# }
+
+# variable "embedding_capacity" {
+#   description = "The capacity for text embedding deployment (tokens per minute)"
+#   type        = number
+#   default     = {% if embedding_capacity %}{{ embedding_capacity | json }}{% else %}50{% endif %}
+# }
+
+####################### version control variables #######################
+
+variable "github_access_token" {
+  description = "The github access token"
+  type        = string
+}
+
+variable "github_owner" {
+  description = "The github owner"
+  type        = string
+}
+
+variable "appType" {
+   description = "List of app names"
+   type        = list(string)
+ }

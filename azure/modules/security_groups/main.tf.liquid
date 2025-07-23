@@ -1,0 +1,222 @@
+resource "azurerm_application_security_group" "bastion_asg" {
+  name                = "{{ project_name }}-{{ environment }}-bastion-asg"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+}
+
+resource "azurerm_application_security_group" "vm_k8s_asg" {
+  name                = "{{ project_name }}-{{ environment }}-k8s-asg"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+}
+
+resource "azurerm_application_security_group" "app_gateway_asg" {
+  name                = "{{ project_name }}-{{ environment }}-app-gateway-asg"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+}
+
+resource "azurerm_application_security_group" "frontend_private_asg" {
+  name                = "{{ project_name }}-{{ environment }}-frontend-private-asg"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+}
+
+resource "azurerm_network_security_group" "k8s_vm_sg" {
+  name                = "{{ project_name }}-{{ environment }}-k8s-vm-nsg"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tags = merge(
+    {% if tags %}{{ tags | json }}{% else %}{}{% endif %},
+    {
+      "Name" = "K8s VM NSG"
+    }
+  )
+
+  security_rule {
+    name                                       = "AllowAllFromAppGateway"
+    priority                                   = 100
+    direction                                  = "Inbound"
+    access                                     = "Allow"
+    protocol                                   = "*"
+    source_port_range                          = "*"
+    destination_port_range                     = "*"
+    source_application_security_group_ids      = [azurerm_application_security_group.app_gateway_asg.id]
+    destination_application_security_group_ids = [azurerm_application_security_group.vm_k8s_asg.id]
+  }
+
+  security_rule {
+    name                       = "AllowAppGatewaySubnetToK8s"
+    priority                   = 101
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = cidrsubnet(element(var.vnet_address_space, 0), var.subnet_prefix_length, var.app_gateway_subnet_offset)
+    destination_address_prefix = cidrsubnet(element(var.vnet_address_space, 0), var.subnet_prefix_length, var.k8s_private_subnet_offset)
+  }
+
+  security_rule {
+    name                                       = "AllowSSHFromBastion"
+    priority                                   = 102
+    direction                                  = "Inbound"
+    access                                     = "Allow"
+    protocol                                   = "Tcp"
+    source_port_range                          = "*"
+    destination_port_range                     = "22"
+    source_application_security_group_ids      = [azurerm_application_security_group.bastion_asg.id]
+    destination_application_security_group_ids = [azurerm_application_security_group.vm_k8s_asg.id]
+  }
+
+  security_rule {
+    name                       = "AllowVPNToK8s"
+    priority                   = 103
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = var.vpn_client_address_space[0]
+    destination_address_prefix = cidrsubnet(element(var.vnet_address_space, 0), var.subnet_prefix_length, var.k8s_private_subnet_offset)
+  }
+}
+
+resource "azurerm_network_security_group" "bastion_nsg" {
+  name                = "{{ project_name }}-{{ environment }}-bastion-nsg"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tags = merge(
+    {% if var.tags %}{{ tags | json }}{% else %}{}{% endif %},
+    {
+      "Name" = "Bastion NSG"
+    }
+  )
+
+  security_rule {
+    name                                       = "AllowSSHFromSpecificIPs"
+    priority                                   = 100
+    direction                                  = "Inbound"
+    access                                     = "Allow"
+    protocol                                   = "Tcp"
+    source_port_range                          = "*"
+    destination_port_range                     = "22"
+    source_address_prefixes                    = var.source_bastion_ip
+    destination_application_security_group_ids = [azurerm_application_security_group.bastion_asg.id]
+  }
+}
+
+resource "azurerm_network_security_group" "app_gateway_nsg" {
+  name                = "{{ project_name }}-{{ environment }}-app-gateway-nsg"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tags                = {% if tags %}{{ tags | json }}{% else %}{}{% endif %}
+
+  security_rule {
+    name                       = "allow-http-vpn"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_ranges    = ["80"]
+    source_address_prefix      = var.vpn_client_address_space[0]
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "allow-https-vpn"
+    priority                   = 101
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_ranges    = ["443"]
+    source_address_prefix      = var.vpn_client_address_space[0]
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "allow-appgw-ports"
+    priority                   = 102
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_ranges    = ["65200-65535"]
+    source_address_prefix      = "GatewayManager"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "deny-internet-http"
+    priority                   = 200
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_ranges    = ["80", "443"]
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_network_security_group" "frontend_private_nsg" {
+  name                = "{{ project_name }}-{{ environment }}-frontend-private-nsg"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tags = merge(
+    {% if tags %}{{ tags | json }}{% else %}{}{% endif %},
+    {
+      "Name" = "Frontend Private NSG"
+    }
+  )
+
+  security_rule {
+    name                       = "AllowVPNToFrontend"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = var.vpn_client_address_space[0]
+    destination_address_prefix = cidrsubnet(element(var.vnet_address_space, 0), var.subnet_prefix_length, var.frontend_subnet_offset)
+  }
+
+  security_rule {
+    name                       = "AllowFrontendToBackend"
+    priority                   = 101
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = cidrsubnet(element(var.vnet_address_space, 0), var.subnet_prefix_length, var.frontend_subnet_offset)
+    destination_address_prefix = cidrsubnet(element(var.vnet_address_space, 0), var.subnet_prefix_length, var.k8s_private_subnet_offset)
+  }
+
+  security_rule {
+    name                       = "AllowFrontendToSQL"
+    priority                   = 102
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "1433"
+    source_address_prefix      = cidrsubnet(element(var.vnet_address_space, 0), var.subnet_prefix_length, var.frontend_subnet_offset)
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "DenyInternetInbound"
+    priority                   = 4096
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "*"
+  }
+}

@@ -1,0 +1,61 @@
+####################### Common Variables #######################
+subscription_id            = "{{ subscriptionId }}"
+project_name               = "{{ project_name }}"
+environment                = "{{ environment }}"
+location                   = "{{ azure_location }}"
+domain_name                = "{{ domain }}"
+resource_group_name        = "{{ resource_group_name }}"
+common_resource_group_name = "{{ resource_group_name }}"
+# Disable availability zones for West US compatibility
+availability_zones         = []
+tags = {
+  Environment = "{{ environment }}"
+  Project     = "{{ project_name }}"
+}
+
+####################### SQL Server Variables #######################
+sql_admin_username = "sqladmin"
+sql_admin_password = "P@ssw0rd123!"  # Consider injecting this securely
+database_name      = "app_database"
+sql_firewall_rules = [
+  {
+    name             = "AllowBastion"
+    start_ip_address = "10.0.0.0"
+    end_ip_address   = "10.0.0.255"
+  }
+]
+
+####################### VNet Variables #######################
+vnet_address_space        = ["10.0.0.0/16"]
+# Subnet configuration - making it dynamic and configurable
+subnet_prefix_length      = 8
+private_subnet_offset     = 20
+public_subnet_offset      = 0
+app_gateway_subnet_offset = 40
+k8s_private_subnet_offset = 30
+frontend_subnet_offset    = 50
+
+####################### security_group variables #######################
+source_bastion_ip = [ "27.107.44.50/32", "58.84.60.45/32", "58.84.62.238/32" ]
+
+####################### VPN Gateway Configuration #######################
+# enable_vpn_gateway = true
+# gateway_subnet_address_prefix = "10.0.60.0/24"
+# vpn_client_address_space = ["10.1.0.0/24"]
+
+####################### AI Foundry Variables #######################
+# enable_ai_foundry = true
+# openai_location = "Eest US"
+# gpt4o_capacity = 50
+# o3_mini_capacity = 20  
+# embedding_capacity = 50
+
+####################### Version Control Variables #######################
+
+github_access_token = "{{ github_access_token }}"
+github_owner = "{{ github_owner }}"
+appType = ["{{ frontend_app_type }}", "{{ backend_app_type }}", "keycloak-service", "auth-service", "gen-ai-service"]
+
+####################### ACR Variables #######################
+
+acr_repo_names = ["myreact", "mynodeexpress", "mykeycloakservice", "myauthservice", "mygenaiservice"]

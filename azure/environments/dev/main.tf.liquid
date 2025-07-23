@@ -1,0 +1,188 @@
+module "vnet" {
+  source                      = "./modules/vnet"
+  project_name                = var.project_name
+  environment                 = var.environment
+  location                    = var.location
+  resource_group_name         = var.resource_group_name
+  availability_zones          = var.availability_zones
+  vnet_address_space          = var.vnet_address_space
+  private_subnet_offset       = var.private_subnet_offset
+  public_ip_allocation_method = var.public_ip_allocation_method
+  subnet_prefix_length        = var.subnet_prefix_length
+  public_ip_sku               = var.public_ip_sku
+  tags                        = var.tags
+  bastion_nsg_id              = module.nsg.bastion_nsg_id
+  app_gateway_subnet_offset   = var.app_gateway_subnet_offset
+  app_gateway_nsg_id          = module.nsg.app_gateway_nsg_id
+  k8s_asg_id                  = module.nsg.k8s_asg_id
+  k8s_vm_nsg_id               = module.nsg.k8s_vm_nsg_id
+  k8s_private_subnet_offset   = var.k8s_private_subnet_offset
+  public_subnet_offset        = var.public_subnet_offset 
+ }
+
+module "nsg" {
+  source              = "./modules/security_groups"
+  project_name        = var.project_name
+  environment         = var.environment
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  source_bastion_ip   = var.source_bastion_ip
+  tags                = var.tags
+  vnet_address_space         = var.vnet_address_space
+  subnet_prefix_length       = var.subnet_prefix_length
+  app_gateway_subnet_offset  = var.app_gateway_subnet_offset
+  k8s_private_subnet_offset  = var.k8s_private_subnet_offset
+  frontend_subnet_offset     = var.frontend_subnet_offset
+  vpn_client_address_space   = var.vpn_client_address_space
+ }
+
+module "bastion" {
+  source                                = "./modules/bastion"
+  project_name                          = var.project_name
+  resource_group_name                   = var.resource_group_name
+  location                              = var.location
+  environment                           = var.environment
+  bastion_nsg_id                        = module.nsg.bastion_nsg_id
+  bastion_asg_id                        = module.nsg.bastion_asg_id
+  bastion_subnet_id                     = module.vnet.public_subnet_id
+  image_offer                           = var.image_offer
+  bastion_os_disk_size                  = var.bastion_os_disk_size
+  bastion_admin_username                = var.bastion_admin_username
+  image_publisher                       = var.image_publisher
+  image_version                         = var.image_version
+  image_sku                             = var.image_sku
+  bastion_os_disk_storage_account_type  = var.bastion_os_disk_storage_account_type
+  bastion_private_ip_address_allocation = var.bastion_private_ip_address_allocation
+  bastion_public_ip_allocation_method   = var.bastion_public_ip_allocation_method
+  bastion_public_ip_sku                 = var.bastion_public_ip_sku
+  bastion_os_disk_caching               = var.bastion_os_disk_caching
+  bastion_vm_size                       = var.bastion_vm_size
+ }
+
+
+module "agw" {
+  source                            = "./modules/application_gateway"
+  project_name                      = var.project_name
+  environment                       = var.environment
+  location                          = var.location
+  domain_name                       = var.domain_name
+  resource_group_name               = var.resource_group_name
+  tags                              = var.tags
+  public_ip_sku                     = var.public_ip_sku
+  availability_zones                = var.availability_zones
+  public_ip_allocation_method       = var.public_ip_allocation_method
+  app_gateway_subnet_id             = module.vnet.app_gateway_subnet_id
+  azurerm_key_vault_id              = module.kv.key_vault_id
+  appgateway_kv_identity_id         = module.kv.kv_access_identity 
+  azurerm_key_vault_certificate_secret_id = module.kv.certificate_secret_id
+ }
+
+module "kv" {
+  source                      = "./modules/key_vault"
+  project_name                = var.project_name
+  environment                 = var.environment
+  location                    = var.location
+  resource_group_name         = var.resource_group_name
+  availability_zones          = var.availability_zones
+ }
+
+module "k8s_common" {
+  source                            = "./modules/kubernetes/common"
+  project_name                      = var.project_name
+  environment                       = var.environment
+ }
+
+module "acr" {
+  source              = "./modules/acr"
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  project_name        = var.project_name
+  acr_repo_names      = var.acr_repo_names
+  tags                = var.tags
+}
+
+module "aks" {
+  source                           = "./modules/kubernetes/aks"
+  project_name                     = var.project_name
+  environment                      = var.environment
+  location                         = var.location
+  resource_group_name              = var.resource_group_name
+  common_resource_group_name       = var.common_resource_group_name
+  aks_subnet_id                    = module.vnet.k8s_private_subnet
+  k8s_ssh_key                      = module.k8s_common.ssh_public_key
+  app_gateway_id                   = module.agw.application_gateway_id
+  kv_user_assigned_identity_id     = module.kv.kv_access_identity
+  app_gateway_subnet_id            = module.vnet.app_gateway_subnet_id
+    acr_registries                 = module.acr.acr_registries
+  tags                             = var.tags
+}
+
+
+module "sql_server" {
+  source              = "./modules/sql_server"
+  project_name        = var.project_name
+  environment         = var.environment
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tags                = var.tags
+  sql_admin_username  = var.sql_admin_username
+  sql_admin_password  = var.sql_admin_password
+  database_name       = var.database_name
+  firewall_rules      = var.sql_firewall_rules
+  allowed_subnet_ids  = [
+    module.vnet.k8s_private_subnet,
+    module.vnet.public_subnet_id
+  ]
+ }
+ 
+# module "vpn_gateway" {
+#   count                        = var.enable_vpn_gateway ? 1 : 0
+#   source                       = "./modules/vpn_gateway"
+#   project_name                 = var.project_name
+#   environment                  = var.environment
+#   location                     = var.location
+#   resource_group_name          = var.resource_group_name
+#   availability_zones           = var.availability_zones
+#   tags                         = var.tags
+#   virtual_network_id           = module.vnet.vnet_id
+#   gateway_subnet_address_prefix = var.gateway_subnet_address_prefix
+#   vpn_client_address_space     = var.vpn_client_address_space
+#   frontend_private_nsg_id      = module.nsg.frontend_private_nsg_id
+#   vnet_address_space           = var.vnet_address_space
+#   subnet_prefix_length         = var.subnet_prefix_length
+#   k8s_private_subnet_offset    = var.k8s_private_subnet_offset
+#   frontend_subnet_offset       = var.frontend_subnet_offset
+# }
+
+# module "ai_foundry" {
+#   source = "./modules/ai_foundry"
+#
+#   project_name              = var.project_name
+#   environment               = var.environment
+#   location                  = var.location
+#   resource_group_name       = var.resource_group_name
+#   openai_location           = var.openai_location
+#   gpt4o_capacity            = var.gpt4o_capacity
+#   o3_mini_capacity          = var.o3_mini_capacity
+#   embedding_capacity        = var.embedding_capacity
+#   existing_key_vault_id     = module.kv.key_vault_id
+#
+#   tags = var.tags
+# }
+
+module "gitops" {
+    source       = "./modules/gitops"
+    name         = var.project_name
+    environment  = var.environment
+    github_token = var.github_access_token
+    github_owner = var.github_owner
+}
+
+module "repository" {
+     source       = "./modules/code-repository"
+     name         = var.project_name
+     appType      = var.appType
+     environment  = var.environment
+     github_token = var.github_access_token 
+     github_owner = var.github_owner
+}

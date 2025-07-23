@@ -12,7 +12,7 @@ data "github_user" "current_user" {
 
 resource "github_team" "github_repo_team" {
   count       = length(var.appType)
-  name        = "${var.appType[count.index]}-team"
+  name        = "${var.name}-${var.appType[count.index]}-team"
   description = "Git Ops team for repo : ${var.appType[count.index]}-app"
 }
 

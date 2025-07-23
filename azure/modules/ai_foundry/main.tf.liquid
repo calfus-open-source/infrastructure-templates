@@ -1,0 +1,168 @@
+# Application Insights for AI Foundry monitoring
+resource "azurerm_application_insights" "ai_foundry_insights" {
+  name                = "{{ project_name }}-{{ environment }}-ai-insights"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  application_type    = "web"
+  retention_in_days   = 30
+
+  tags = merge(var.tags, {
+    Name = "{{ project_name }}-{{ environment }}-ai-insights"
+  })
+}
+
+resource "azurerm_storage_account" "ai_foundry_storage" {
+  name                     = "{{ project_name | replace: '-', '' | downcase }}{{ environment | replace: '-', '' | downcase }}aistorage"
+  resource_group_name      = var.resource_group_name
+  location                 = var.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+
+  blob_properties {
+    versioning_enabled = true
+
+    delete_retention_policy {
+      days = 7
+    }
+  }
+
+  tags = merge(var.tags, {
+    Name = "{{ project_name }}-{{ environment }}-ai-storage"
+  })
+}
+
+resource "azurerm_container_registry" "ai_foundry_acr" {
+  name                = "{{ project_name | replace: '-', '' | downcase }}{{ environment | replace: '-', '' | downcase }}aiacr"
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  sku                 = "Standard"
+  admin_enabled       = true
+
+  tags = merge(var.tags, {
+    Name = "{{ project_name }}-{{ environment }}-ai-acr"
+  })
+}
+
+resource "azurerm_ai_services" "ai_services" {
+  name                  = "{{ project_name | replace: '-', '' | downcase }}{{ environment | replace: '-', '' | downcase }}aiservices"
+  location              = var.openai_location
+  resource_group_name   = var.resource_group_name
+  sku_name              = "S0"
+  custom_subdomain_name = "{{ project_name | replace: '-', '' | downcase }}{{ environment | replace: '-', '' | downcase }}aiservices"
+
+  tags = merge(var.tags, {
+    Name = "{{ project_name }}-{{ environment }}-ai-services"
+  })
+}
+
+# Create Azure AI Foundry Hub
+resource "azurerm_ai_foundry" "ai_foundry_hub" {
+  name                = "{{ project_name }}-{{ environment }}-ai-hub"
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  storage_account_id  = azurerm_storage_account.ai_foundry_storage.id
+  key_vault_id        = var.existing_key_vault_id
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  tags = merge(var.tags, {
+    Name = "{{ project_name }}-{{ environment }}-ai-hub"
+  })
+
+  depends_on = [
+    azurerm_application_insights.ai_foundry_insights,
+    azurerm_storage_account.ai_foundry_storage,
+    azurerm_container_registry.ai_foundry_acr
+  ]
+}
+
+# Create Azure AI Foundry Project
+resource "azurerm_ai_foundry_project" "ai_foundry_project" {
+  name               = "{{ project_name }}-{{ environment }}-project"
+  location           = azurerm_ai_foundry.ai_foundry_hub.location
+  ai_services_hub_id = azurerm_ai_foundry.ai_foundry_hub.id
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  tags = merge(var.tags, {
+    Name = "{{ project_name }}-{{ environment }}-ai-project"
+  })
+
+  depends_on = [azurerm_ai_foundry.ai_foundry_hub]
+}
+
+# Deploy GPT-4o model
+resource "azurerm_cognitive_deployment" "gpt4o_deployment" {
+  name                 = "gpt-4o"
+  cognitive_account_id = azurerm_ai_services.ai_services.id
+
+  model {
+    format  = "OpenAI"
+    name    = "gpt-4o"
+    version = "2024-11-20"
+  }
+
+  sku {
+    name     = "GlobalStandard"
+    capacity = var.gpt4o_capacity
+  }
+}
+
+# Deploy o3-mini model
+resource "azurerm_cognitive_deployment" "o3_mini_deployment" {
+  name                 = "o3-mini"
+  cognitive_account_id = azurerm_ai_services.ai_services.id
+
+  model {
+    format  = "OpenAI"
+    name    = "o3-mini"
+    version = "2025-01-31"
+  }
+
+  sku {
+    name     = "GlobalStandard"
+    capacity = var.o3_mini_capacity
+  }
+}
+
+# Deploy text-embedding model
+resource "azurerm_cognitive_deployment" "embedding_deployment" {
+  name                 = "text-embedding-ada-002"
+  cognitive_account_id = azurerm_ai_services.ai_services.id
+
+  model {
+    format  = "OpenAI"
+    name    = "text-embedding-ada-002"
+    version = "2"
+  }
+
+  sku {
+    name     = "Standard"
+    capacity = var.embedding_capacity
+  }
+}
+
+# Store AI Services API key in Key Vault
+resource "azurerm_key_vault_secret" "ai_services_api_key" {
+  name         = "ai-services-api-key"
+  value        = azurerm_ai_services.ai_services.primary_access_key
+  key_vault_id = var.existing_key_vault_id
+
+  depends_on = [azurerm_ai_services.ai_services]
+}
+
+# Store AI Services endpoint in Key Vault
+resource "azurerm_key_vault_secret" "ai_services_endpoint" {
+  name         = "ai-services-endpoint"
+  value        = azurerm_ai_services.ai_services.endpoint
+  key_vault_id = var.existing_key_vault_id
+
+  depends_on = [azurerm_ai_services.ai_services]
+}
+
+# Get current Azure configuration
+data "azurerm_client_config" "current" {}
