@@ -1,0 +1,130 @@
+name: Security Scanning
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'refactor/**'
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+  schedule:
+    # Run weekly on Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+
+jobs:
+  tfsec:
+    name: Terraform Security Scan (tfsec)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          soft_fail: false
+          format: sarif
+          additional_args: --minimum-severity MEDIUM
+
+      - name: Upload tfsec results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: results.sarif
+
+  checkov:
+    name: Infrastructure Security Scan (Checkov)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Checkov
+        run: pip install checkov==3.1.34
+
+      - name: Run Checkov
+        id: checkov
+        run: |
+          checkov --directory . \
+            --framework terraform \
+            --output cli \
+            --output sarif \
+            --output-file-path console,results.sarif \
+            --soft-fail || true
+
+      - name: Upload Checkov results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: results.sarif
+
+  trivy:
+    name: Container & IaC Security Scan (Trivy)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.16.1
+        with:
+          scan-type: 'config'
+          hide-progress: false
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '0'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  security-summary:
+    name: Security Scan Summary
+    runs-on: ubuntu-latest
+    needs:
+      - tfsec
+      - checkov
+      - trivy
+    if: always()
+    
+    steps:
+      - name: Create security summary
+        run: |
+          echo "## Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.tfsec.result }}" == "success" ]; then
+            echo "✅ tfsec: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ tfsec: Issues found (check Security tab)" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.checkov.result }}" == "success" ]; then
+            echo "✅ Checkov: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Checkov: Issues found (check Security tab)" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.trivy.result }}" == "success" ]; then
+            echo "✅ Trivy: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Trivy: Issues found (check Security tab)" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔒 View detailed security findings in the **Security** tab" >> $GITHUB_STEP_SUMMARY

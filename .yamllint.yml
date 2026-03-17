@@ -1,0 +1,68 @@
+# YAMLlint configuration for infrastructure-templates
+# https://yamllint.readthedocs.io/
+
+---
+extends: default
+
+rules:
+  # Line length set to 120 for practical use
+  line-length:
+    max: 120
+    level: warning
+
+  # Indentation rules
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+
+  # Comments
+  comments:
+    min-spaces-from-content: 1
+
+  # Truthy values
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no']
+    check-keys: true
+
+  # Braces spacing
+  braces:
+    max-spaces-inside: 1
+    min-spaces-inside: 0
+
+  # Brackets spacing
+  brackets:
+    max-spaces-inside: 1
+    min-spaces-inside: 0
+
+  # Document start
+  document-start:
+    present: true
+
+  # Empty values
+  empty-values:
+    forbid-in-block-mappings: false
+    forbid-in-flow-mappings: true
+
+  # Key duplicates
+  key-duplicates: enable
+
+  # New lines
+  new-line-at-end-of-file: enable
+  new-lines:
+    type: unix
+
+  # Trailing spaces
+  trailing-spaces: enable
+
+  # Octal values
+  octal-values:
+    forbid-implicit-octal: true
+
+# Ignore specific patterns
+ignore: |
+  .git/
+  .github/
+  node_modules/
+  *.liquid
+  .pre-commit-config.yaml

@@ -13,13 +13,20 @@
   ansible.builtin.debug: 
     msg: "kubelet systemctl: {{SHELL_STDOUT.stdout}}"
 
+- name: Check if Kubernetes cluster is already initialized
+  stat:
+    path: /etc/kubernetes/admin.conf
+  register: k8s_admin_conf
+
 - name: Reset Kubernetes component
   shell: "kubeadm reset --force"
   register: reset_cluster
+  when: not k8s_admin_conf.stat.exists
 
 - name: Pause for 10 seconds to make sure reset is complete
   ansible.builtin.pause:
     seconds: 10
+  when: not k8s_admin_conf.stat.exists
 
 - name: debug output
   ansible.builtin.debug: 
@@ -39,7 +46,6 @@
       dest: /run/containerd
 
 - name: Init Kubernetes cluster
-  #when: reset_cluster is succeeded
   shell: |
     kubeadm init --service-cidr {{ service_cidr }} \
                  --pod-network-cidr {{ pod_network_cidr }} \
@@ -50,6 +56,7 @@
   args:
     chdir: $HOME
   register: init_cluster
+  when: not k8s_admin_conf.stat.exists
   environment:
     no_proxy: "$no_proxy,.svc,.svc.cluster.local"
 

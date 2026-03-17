@@ -1,0 +1,54 @@
+# tfsec configuration for infrastructure-templates
+# https://aquasecurity.github.io/tfsec/
+
+---
+# Minimum severity level to report
+minimum_severity: MEDIUM
+
+# Exclude specific checks (with justification)
+exclude:
+  # ALB security groups intentionally allow 0.0.0.0/0 for public access
+  - aws-ec2-no-public-ingress-sgr:
+      resource: aws_security_group.alb
+  - aws-ec2-no-public-ingress-sgr:
+      resource: aws_security_group.ingress
+
+# Severity overrides
+severity_overrides:
+  # Enforce encryption
+  aws-s3-enable-bucket-encryption: ERROR
+  aws-rds-encrypt-instance-storage-data: ERROR
+  aws-ec2-enable-at-rest-encryption: ERROR
+  
+  # IAM best practices
+  aws-iam-no-policy-wildcards: WARNING
+  
+  # Network security
+  aws-ec2-no-public-egress-sgr: WARNING
+  aws-vpc-no-public-ingress-acl: WARNING
+
+# Custom checks directory (if we add custom policies later)
+# custom_check_dir: .tfsec-custom/
+
+# Ignore specific paths
+exclude_paths:
+  - .terraform/
+  - .git/
+  - node_modules/
+  - "**/*.tfvars"
+  - "**/*.tfvars.liquid"
+
+# Output format
+format: default
+
+# Include passed checks in output
+include-passed: false
+
+# Include ignored checks in output
+include-ignored: false
+
+# Soft fail mode (report but don't fail)
+soft-fail: false
+
+# Concise output
+concise-output: false

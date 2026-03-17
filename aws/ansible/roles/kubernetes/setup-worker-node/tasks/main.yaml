@@ -9,9 +9,15 @@
     - src: /data/run/containerd
       dest: /run/containerd
 
+- name: Check if node is already joined to cluster
+  stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet_conf
+
 - name: Reset Kubernetes component
   shell: "kubeadm reset --force"
   register: reset_cluster
+  when: not kubelet_conf.stat.exists
 
 - name: Copy join command from Ansiblehost to the worker nodes.
   copy:
@@ -20,10 +26,10 @@
     mode: 0777
 
 - name: Join to Kubernetes cluster
-  when: reset_cluster is succeeded
   shell: |
     sh $HOME/kubernetes_join_command
   register: join_cluster
+  when: not kubelet_conf.stat.exists
   environment:
     no_proxy: "$no_proxy,.svc,.svc.cluster.local"
 
