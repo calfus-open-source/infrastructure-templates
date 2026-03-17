@@ -10,7 +10,7 @@
     },
     {
       "Effect": "Allow",
-      "Action": 
+      "Action":
         [
           "iam:CreateVirtualMFADevice",
           "iam:DeleteVirtualMFADevice",
@@ -75,10 +75,10 @@
         "ecr:GetRegistryScanningConfiguration"
       ],
       "Resource": "*"
-    },    
+    },
     {
       "Effect": "Deny",
-      "Action": [ 
+      "Action": [
         "codepipeline:DeletePipeline",
         "codepipeline:CreatePipeline"
       ],
@@ -108,7 +108,7 @@
         "Condition": {
             "StringEqualsIfExists": {
                 "codecommit:References": [
-                    "refs/heads/main", 
+                    "refs/heads/main",
                     "refs/heads/prod"
                   ]
             },

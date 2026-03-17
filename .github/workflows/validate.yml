@@ -16,7 +16,7 @@ jobs:
   terraform-validate:
     name: Terraform Validation
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -66,7 +66,7 @@ jobs:
   ansible-lint:
     name: Ansible Linting
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -91,7 +91,7 @@ jobs:
   yaml-lint:
     name: YAML Linting
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -110,7 +110,7 @@ jobs:
   liquid-template-validation:
     name: Liquid Template Validation
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -121,7 +121,7 @@ jobs:
   terraform-naming-check:
     name: Terraform Naming Conventions
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -132,7 +132,7 @@ jobs:
   shellcheck:
     name: Shell Script Linting
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -146,7 +146,7 @@ jobs:
   markdown-lint:
     name: Markdown Linting
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -161,7 +161,7 @@ jobs:
   validation-summary:
     name: Validation Summary
     runs-on: ubuntu-latest
-    needs: 
+    needs:
       - terraform-validate
       - ansible-lint
       - yaml-lint
@@ -170,33 +170,33 @@ jobs:
       - shellcheck
       - markdown-lint
     if: always()
-    
+
     steps:
       - name: Check validation results
         run: |
           echo "## Validation Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ All validation checks completed" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ needs.terraform-validate.result }}" != "success" ]; then
             echo "❌ Terraform validation failed" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
-          
+
           if [ "${{ needs.ansible-lint.result }}" != "success" ]; then
             echo "❌ Ansible linting failed" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
-          
+
           if [ "${{ needs.yaml-lint.result }}" != "success" ]; then
             echo "❌ YAML linting failed" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
-          
+
           if [ "${{ needs.liquid-template-validation.result }}" != "success" ]; then
             echo "❌ Liquid template validation failed" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "All validation checks passed! ✨" >> $GITHUB_STEP_SUMMARY

@@ -40,7 +40,7 @@ resource "aws_iam_policy" "gitops_user_policy" {
           "codecommit:DeleteRepository"
         ]
       }
-    ]  
+    ]
 }
 EOF
 }
@@ -51,8 +51,8 @@ resource "aws_iam_user" "gitops_user" {
     "product"        = var.name
     "environment"    = var.environment
     "role"           = "cicd"
-    "terraform"      = "true"    
-  }  
+    "terraform"      = "true"
+  }
 }
 
 resource "aws_iam_user_policy_attachment" "gitops_user_policy" {

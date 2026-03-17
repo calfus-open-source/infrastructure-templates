@@ -33,21 +33,21 @@ for file in $liquid_files; do
   # Count opening and closing if tags
   if_count=$(grep -o '{%[[:space:]]*if[[:space:]]' "$file" | wc -l | tr -d ' ')
   endif_count=$(grep -o '{%[[:space:]]*endif[[:space:]]*%}' "$file" | wc -l | tr -d ' ')
-  
+
   if [ "$if_count" -ne "$endif_count" ]; then
     echo -e "${RED}✗ $file: Unmatched {% if %} tags (if: $if_count, endif: $endif_count)${NC}"
     ((errors++))
   fi
-  
+
   # Count opening and closing for tags
   for_count=$(grep -o '{%[[:space:]]*for[[:space:]]' "$file" | wc -l | tr -d ' ')
   endfor_count=$(grep -o '{%[[:space:]]*endfor[[:space:]]*%}' "$file" | wc -l | tr -d ' ')
-  
+
   if [ "$for_count" -ne "$endfor_count" ]; then
     echo -e "${RED}✗ $file: Unmatched {% for %} tags (for: $for_count, endfor: $endfor_count)${NC}"
     ((errors++))
   fi
-  
+
   # Check for orphaned endif/endfor
   if grep -q '{%[[:space:]]*endif[[:space:]]*%}' "$file"; then
     if [ "$if_count" -eq 0 ] && [ "$endif_count" -gt 0 ]; then
@@ -67,7 +67,7 @@ for file in $liquid_files; do
     echo -e "${YELLOW}⚠️  $file: Possible malformed variable interpolation${NC}"
     ((warnings++))
   fi
-  
+
   # Check for single braces (might be typo)
   if grep -qE '\{[^{%]' "$file"; then
     # Filter out valid JSON/HCL syntax in heredocs or strings
@@ -76,7 +76,7 @@ for file in $liquid_files; do
       ((warnings++))
     fi
   fi
-  
+
   # Check for undefined filter usage (common mistake)
   if grep -qE '\{\{.*\|[[:space:]]*[a-z_]+[[:space:]]*\}\}' "$file"; then
     filters=$(grep -oE '\|[[:space:]]*([a-z_]+)' "$file" | sed 's/|[[:space:]]*//' | sort -u)

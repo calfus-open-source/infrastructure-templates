@@ -3,6 +3,7 @@
   file:
     path: "/etc/modules-load.d/containerd.conf"
     state: "touch"
+    mode: "0644"
 
 - name: Add conf for containerd
   blockinfile:
@@ -20,6 +21,7 @@
   file:
     path: "/etc/sysctl.d/99-kubernetes-cri.conf"
     state: "touch"
+    mode: "0644"
 
 - name: Add configuration for containerd networking
   blockinfile:
@@ -34,7 +36,7 @@
   command: sudo sysctl --system
 
 - name: Disable swappiness and configure sysctl
-  sysctl:
+  ansible.posix.sysctl:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
     state: present
@@ -60,26 +62,26 @@
 - name: Check if /var/lib/containerd is not a symlink
   stat:
     path: /var/lib/containerd
-  register: lib_containerd_stat
+  register: kubernetes_lib_containerd_stat
 
 - name: Check if /run/containerd is not a symlink
   stat:
     path: /run/containerd
-  register: run_containerd_stat
+  register: kubernetes_run_containerd_stat
 
 - name: Remove /var/lib/containerd if it is not a symlink
   file:
     path: /var/lib/containerd
     state: absent
     force: yes
-  when: lib_containerd_stat.stat.exists and not lib_containerd_stat.stat.islnk
+  when: kubernetes_lib_containerd_stat.stat.exists and not kubernetes_lib_containerd_stat.stat.islnk
 
 - name: Remove /run/containerd if it is not a symlink
   file:
     path: /run/containerd
     state: absent
     force: yes
-  when: run_containerd_stat.stat.exists and not run_containerd_stat.stat.islnk
+  when: kubernetes_run_containerd_stat.stat.exists and not kubernetes_run_containerd_stat.stat.islnk
 
 - name: Create symlinks for containerd
   file:
@@ -95,28 +97,34 @@
       dest: /var/log/pods/syslogs
 
 - name: Install containerd
-  shell: |
-    apt-get update && sudo apt-get install -y containerd
-  register: SHELL_STDOUT
+  ansible.builtin.apt:
+    name: containerd
+    state: present
+    update_cache: true
+  register: kubernetes_containerd_install
 
 - name: Debug output of containerd installation
   debug:
-    msg: "Containerd install: stderr: {{ SHELL_STDOUT.stderr_lines }} stdout: {{ SHELL_STDOUT.stdout_lines }}"
+    msg: "Containerd install: {{ kubernetes_containerd_install }}"
 
 - name: Configure containerd
   shell: |
+    set -o pipefail
     containerd config default | sudo tee /etc/containerd/config.toml
     sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
     sed -i 's/\/var\/lib\/containerd/\/data\/lib\/containerd/g' /etc/containerd/config.toml
     sed -i 's/\/run\/containerd/\/data\/run\/containerd/g' /etc/containerd/config.toml
     systemctl restart containerd
     systemctl enable containerd
-  register: SHELL_STDOUT
+  args:
+    executable: /bin/bash
+  register: kubernetes_containerd_config
 
 - name: Create crictl.yaml file
   file:
     path: "/etc/crictl.yaml"
     state: "touch"
+    mode: "0644"
 
 - name: Configure crictl.yaml
   blockinfile:

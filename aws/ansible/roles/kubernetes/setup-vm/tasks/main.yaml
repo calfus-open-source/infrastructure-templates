@@ -1,4 +1,3 @@
-
 # ---
 # - name: Update package cache
 #   apt:
@@ -16,17 +15,17 @@
 #       - ca-certificates
 #       - curl
 #       - gnupg2
-#       - lsb-release 
+#       - lsb-release
 #       - ntp
 #       - ntpdate
 #       - software-properties-common
 #       - watch
 #       - ipvsadm
 #       - ipset
-#       - tcpdump     
-#       - firewalld     
-#       - acl     
-#       - net-tools     
+#       - tcpdump
+#       - firewalld
+#       - acl
+#       - net-tools
 #       - awscli
 #       - jq
 #       - python3-pip
@@ -56,7 +55,7 @@
 #   register: UPTIME_PRE_REBOOT
 
 # - name: debug output
-#   ansible.builtin.debug: 
+#   ansible.builtin.debug:
 #     msg: "Uptime Before Reboot: {{UPTIME_PRE_REBOOT.stdout}}"
 
 # - name: Reboot node and stop polling
@@ -73,7 +72,7 @@
 #   register: UPTIME_POST_REBOOT
 
 # - name: debug output
-#   ansible.builtin.debug: 
+#   ansible.builtin.debug:
 #     msg: "Uptime After Reboot: {{UPTIME_POST_REBOOT.stdout}}"
 
 ---
@@ -84,7 +83,7 @@
 - name: Upgrade to latest version of packages
   apt:
     name: "*"
-    state: latest
+    state: present
 
 - name: Install pre-requisites
   apt:
@@ -93,27 +92,27 @@
       - ca-certificates
       - curl
       - gnupg2
-      - lsb-release 
+      - lsb-release
       - ntp
       - ntpdate
       - software-properties-common
       - watch
       - ipvsadm
       - ipset
-      - tcpdump     
-      - firewalld     
-      - acl     
-      - net-tools     
+      - tcpdump
+      - firewalld
+      - acl
+      - net-tools
       - awscli
       - jq
       - python3-pip
-    state: latest
+    state: present
     update_cache: true
 
 - name: Install Docker
   apt:
     name: docker.io
-    state: latest
+    state: present
 
 - name: Start Docker service
   systemd:
@@ -146,15 +145,15 @@
     enabled: yes
 
 - name: Check the uptime prior reboot
-  shell: uptime
-  register: UPTIME_PRE_REBOOT
+  command: uptime
+  register: kubernetes_uptime_pre_reboot
 
 - name: Debug output for uptime before reboot
-  ansible.builtin.debug: 
-    msg: "Uptime Before Reboot: {{UPTIME_PRE_REBOOT.stdout}}"
+  ansible.builtin.debug:
+    msg: "Uptime Before Reboot: {{ kubernetes_uptime_pre_reboot.stdout }}"
 
 - name: Reboot node and stop polling
-  shell: reboot
+  command: reboot
   async: 10 # Do not care for 10 sec
   poll: 0 # Fire & Forget
   when: not ansible_check_mode
@@ -163,9 +162,9 @@
   ansible.builtin.wait_for_connection:
 
 - name: Check the uptime post reboot
-  shell: uptime
-  register: UPTIME_POST_REBOOT
+  command: uptime
+  register: kubernetes_uptime_post_reboot
 
 - name: Debug output for uptime after reboot
-  ansible.builtin.debug: 
-    msg: "Uptime After Reboot: {{UPTIME_POST_REBOOT.stdout}}"
+  ansible.builtin.debug:
+    msg: "Uptime After Reboot: {{ kubernetes_uptime_post_reboot.stdout }}"

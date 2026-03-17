@@ -17,7 +17,7 @@ resource "aws_security_group" "ingress" {
     protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
   }
-  
+
   egress {
     protocol         = "-1"
     from_port        = 0
@@ -25,13 +25,13 @@ resource "aws_security_group" "ingress" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
-  
+
   tags = {
     Name             = "${var.name}-${var.environment}-ingress-sg"
     "product"        = var.name
     "environment"    = var.environment
     "role"           = "networking"
-    "terraform"      = "true"    
+    "terraform"      = "true"
   }
 }
 
@@ -50,13 +50,13 @@ resource "aws_security_group" "backend-ingress" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
-  
+
   tags = {
     Name             = "${var.name}-${var.environment}-backend-ingress-sg"
     "product"        = var.name
     "environment"    = var.environment
     "role"           = "networking"
-    "terraform"      = "true"    
+    "terraform"      = "true"
   }
 }
 

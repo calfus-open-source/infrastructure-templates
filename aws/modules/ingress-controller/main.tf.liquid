@@ -29,7 +29,7 @@ provider "kubernetes" {
     }
   }
   {% comment %} else condition {% endcomment %}
-  {% else %}  
+  {% else %}
   provider "helm" {
     kubernetes {
       host                   = var.cluster_endpoint
@@ -69,7 +69,7 @@ resource "aws_iam_role" "aws-load-balancer-controller-role" {
   tags = {
     "product"        = var.name
     "role"           = "networking"
-    "terraform"      = "true"    
+    "terraform"      = "true"
   }
 }
 
@@ -80,7 +80,7 @@ resource "aws_iam_policy" "aws-load-balancer-controller-iam-policy" {
   tags = {
     "product"        = var.name
     "role"           = "networking"
-    "terraform"      = "true"    
+    "terraform"      = "true"
   }
 }
 

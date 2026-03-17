@@ -65,7 +65,7 @@ module "eks" {
           }
         }
     },
-    { 
+    {
       for i in range(1) :
         "kube-system-${element(split("-", local.azs[i]), 2)}" => {
           selectors = [
@@ -82,7 +82,7 @@ module "eks" {
     "product"        = var.name
     "environment"    = var.environment
     "role"           = "eks"
-    "terraform"      = "true"    
+    "terraform"      = "true"
   }
 }
 
@@ -151,7 +151,7 @@ resource "aws_secretsmanager_secret" "k8s_secret" {
   tags = {
     "product"        = var.name
     "environment"    = var.environment
-    "terraform"      = "true"  
+    "terraform"      = "true"
   }
 }
 

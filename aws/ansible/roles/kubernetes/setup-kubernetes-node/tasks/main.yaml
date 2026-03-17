@@ -1,6 +1,11 @@
 ---
 - name: create the kube user account
-  user: name=kube state=present home=/data/home/kube createhome=yes shell=/bin/bash
+  ansible.builtin.user:
+    name: kube
+    state: present
+    home: /data/home/kube
+    createhome: yes
+    shell: /bin/bash
 
 - name: allow 'kube' to use sudo without needing a password
   lineinfile:
@@ -14,7 +19,7 @@
     state: directory
     owner: kube
     group: kube
-    mode: 0700
+    mode: "0700"
 
 - name: set up authorized keys for the kube user
   copy:
@@ -22,8 +27,8 @@
     dest: /data/home/kube/.ssh/authorized_keys
     remote_src: yes
     owner: kube
-    group: kube   
-    mode: 0400
+    group: kube
+    mode: "0400"
 
 - name: Sets default ACL for kube on /data
   ansible.posix.acl:
@@ -46,8 +51,9 @@
 - name: Create logrotate configuration
   template:
     src: ./templates/logrotate.j2
-    dest: /etc/logrotate.d/syslogsconf 
-  notify: Reload Logrotate 
+    dest: /etc/logrotate.d/syslogsconf
+    mode: "0644"
+  notify: Reload Logrotate
 
 - name: Create cronjob for pruning images
   become: yes
@@ -83,19 +89,19 @@
   lineinfile:
     path: /etc/systemd/system/multi-user.target.wants/kubelet.service
     line: 'ExecStartPre=-/usr/local/bin/create-symlink.sh'
-    insertbefore: '^ExecStart=' 
+    insertbefore: '^ExecStart='
     state: present
 
 - name: Check the uptime prior reboot
-  shell: uptime
-  register: UPTIME_PRE_REBOOT
+  command: uptime
+  register: kubernetes_uptime_pre_reboot
 
 - name: debug output
-  ansible.builtin.debug: 
-    msg: "Uptime Before Reboot: {{UPTIME_PRE_REBOOT.stdout}}"
+  ansible.builtin.debug:
+    msg: "Uptime Before Reboot: {{ kubernetes_uptime_pre_reboot.stdout }}"
 
-- name: Reboot node and stop polling.
-  shell: reboot
+- name: Reboot node and stop polling
+  command: reboot
   async: 10 # Do not care for 10 sec
   poll: 0 # Fire & Forget
   when: not ansible_check_mode
@@ -104,9 +110,9 @@
   ansible.builtin.wait_for_connection:
 
 - name: Check the uptime post reboot
-  shell: uptime
-  register: UPTIME_POST_REBOOT
+  command: uptime
+  register: kubernetes_uptime_post_reboot
 
 - name: debug output
-  ansible.builtin.debug: 
-    msg: "Uptime After Reboot: {{UPTIME_POST_REBOOT.stdout}}"    
+  ansible.builtin.debug:
+    msg: "Uptime After Reboot: {{ kubernetes_uptime_post_reboot.stdout }}"

@@ -1,6 +1,6 @@
 ---
-
-- hosts: k8s_master
+- name: Setup ECR helper
+  hosts: k8s_master
   gather_facts: yes
   become: yes
   roles:

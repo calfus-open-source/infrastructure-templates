@@ -1,26 +1,30 @@
 # Contributing to Infrastructure Templates
 
-Thank you for your interest in contributing! This document provides guidelines for contributing to the infrastructure-templates repository.
+Thank you for your interest in contributing! This document provides guidelines
+for contributing to the infrastructure-templates repository.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 1. **Install required tools**:
+
    ```bash
    # macOS
    brew install terraform ansible pre-commit tflint yamllint
-   
+
    # Python tools
    pip install ansible-lint pre-commit
    ```
 
 2. **Set up pre-commit hooks**:
+
    ```bash
    pre-commit install
    ```
 
 3. **Verify installation**:
+
    ```bash
    pre-commit run --all-files
    ```
@@ -28,12 +32,14 @@ Thank you for your interest in contributing! This document provides guidelines f
 ## 📋 Contribution Workflow
 
 ### 1. Fork and Clone
+
 ```bash
 git clone https://github.com/YOUR_USERNAME/infrastructure-templates.git
 cd infrastructure-templates
 ```
 
 ### 2. Create a Feature Branch
+
 ```bash
 git checkout -b feature/your-feature-name
 # or
@@ -43,6 +49,7 @@ git checkout -b fix/bug-description
 ### 3. Make Your Changes
 
 Follow our coding standards:
+
 - **Terraform**: All resources must have tags, use snake_case naming
 - **Ansible**: Roles must be idempotent, tasks must have descriptive names
 - **Templates**: Use `.liquid` extension, validate syntax
@@ -50,11 +57,13 @@ Follow our coding standards:
 ### 4. Test Your Changes
 
 #### Run Pre-Commit Hooks
+
 ```bash
 pre-commit run --all-files
 ```
 
 #### Test Terraform Modules
+
 ```bash
 # Format
 terraform fmt -recursive
@@ -66,6 +75,7 @@ terraform validate
 ```
 
 #### Test Ansible Roles
+
 ```bash
 # Syntax check
 ansible-playbook aws/ansible/playbooks/your-playbook.yml --syntax-check
@@ -78,6 +88,7 @@ yamllint aws/ansible/
 ```
 
 #### Run Custom Validation Scripts
+
 ```bash
 ./scripts/validate-liquid-templates.sh
 ./scripts/check-terraform-naming.sh
@@ -86,6 +97,7 @@ yamllint aws/ansible/
 ### 5. Commit Your Changes
 
 Write clear, descriptive commit messages:
+
 ```bash
 git add .
 git commit -m "feat: add new vpc module for multi-region support"
@@ -94,6 +106,7 @@ git commit -m "fix: resolve idempotency issue in setup-master-node role"
 ```
 
 **Commit message format**:
+
 - `feat:` New feature
 - `fix:` Bug fix
 - `docs:` Documentation changes
@@ -114,6 +127,7 @@ Then open a Pull Request on GitHub and fill out the PR template.
 ### Terraform
 
 ✅ **Required**:
+
 - All `.tf` files must have `.liquid` extension
 - Resources must have tags: `Name`, `environment`, `terraform`, `product`
 - Variables must have `description` and `type`
@@ -121,6 +135,7 @@ Then open a Pull Request on GitHub and fill out the PR template.
 - No hardcoded credentials or secrets
 
 ❌ **Prohibited**:
+
 - Hardcoded AWS regions (use `var.aws_region`)
 - Overly permissive security groups without justification
 - Resources without tags
@@ -128,6 +143,7 @@ Then open a Pull Request on GitHub and fill out the PR template.
 ### Ansible
 
 ✅ **Required**:
+
 - Roles must be idempotent (safe to run multiple times)
 - Tasks must have descriptive `name` attributes
 - Use `when` conditions for destructive operations
@@ -135,6 +151,7 @@ Then open a Pull Request on GitHub and fill out the PR template.
 - YAML files must pass yamllint
 
 ❌ **Prohibited**:
+
 - Unconditional `kubeadm reset` or similar destructive commands
 - Tasks without names
 - Hardcoded passwords or secrets
@@ -143,6 +160,7 @@ Then open a Pull Request on GitHub and fill out the PR template.
 ### Shell Scripts
 
 ✅ **Required**:
+
 - Use `#!/usr/bin/env bash` shebang
 - Include `set -e` for error handling
 - Add comments explaining complex logic
@@ -201,6 +219,7 @@ pre-commit run terraform_fmt
 ### CI/CD Pipeline
 
 All PRs automatically run:
+
 1. **Validation workflow**: Linting, formatting, syntax checks
 2. **Security scan workflow**: tfsec, checkov, trivy scans
 
@@ -270,7 +289,7 @@ git push origin feature/my-feature
 
 ### File Structure
 
-```
+```text
 infrastructure-templates/
 ├── aws/                    # AWS infrastructure
 │   ├── modules/           # Reusable Terraform modules

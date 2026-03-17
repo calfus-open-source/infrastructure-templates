@@ -1,6 +1,7 @@
 ---
-- hosts: k8s_master
+- name: Configure storage classes
+  hosts: k8s_master
   gather_facts: yes
   become: yes
   roles:
-    - { role:  ../roles/kubernetes/configure-storage-classes, tags: 'configure-storage-classes' }
+    - { role: ../roles/kubernetes/configure-storage-classes, tags: 'configure-storage-classes' }

@@ -1,23 +1,23 @@
 resource "aws_acm_certificate" "ssl-cert" {
     domain_name       = var.domain_name
     validation_method = "DNS"
-  
+
     tags = {
       "product"        = var.name
       "environment"    = var.environment
       "role"           = "networking"
-      "terraform"      = "true"    
+      "terraform"      = "true"
     }
 
     subject_alternative_names = [
       "*.${var.domain_name}"
     ]
-  
+
     lifecycle {
       create_before_destroy = true
     }
   }
-  
+
 resource "aws_route53_record" "lifecycle-cert-validation" {
   for_each = {
     for dvo in aws_acm_certificate.ssl-cert.domain_validation_options : dvo.domain_name => {

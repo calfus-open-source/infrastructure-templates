@@ -1,12 +1,13 @@
 ---
-- hosts: k8s_master
-  gather_facts: yes
+- name: Create storage class configuration
   become: yes
-  roles:
-    - { role:  ../roles/kubernetes/configure-kubernetes-cluster, tags: 'configure-kubernetes-cluster' }
- 
-- hosts: k8s_master
-  gather_facts: yes
+  become_user: kube
+  ansible.builtin.template:
+    src: storage-class.j2
+    dest: $HOME/storage-class.yaml
+    mode: "0644"
+
+- name: Apply storage class configuration
   become: yes
-  roles:
-    - { role:  ../roles/kubernetes/configure-storage-classes, tags: 'configure-storage-classes' }
+  become_user: kube
+  command: kubectl apply -f $HOME/storage-class.yaml

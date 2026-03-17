@@ -19,10 +19,10 @@ severity_overrides:
   aws-s3-enable-bucket-encryption: ERROR
   aws-rds-encrypt-instance-storage-data: ERROR
   aws-ec2-enable-at-rest-encryption: ERROR
-  
+
   # IAM best practices
   aws-iam-no-policy-wildcards: WARNING
-  
+
   # Network security
   aws-ec2-no-public-egress-sgr: WARNING
   aws-vpc-no-public-ingress-acl: WARNING

@@ -26,6 +26,7 @@ This repository uses **100% free tools** with no cloud infrastructure costs:
 ### 1. Install Required Tools
 
 #### macOS
+
 ```bash
 # Package managers
 brew install terraform ansible pre-commit tflint yamllint shellcheck
@@ -35,6 +36,7 @@ pip install ansible-lint pre-commit checkov
 ```
 
 #### Linux (Ubuntu/Debian)
+
 ```bash
 # System packages
 sudo apt-get update
@@ -93,6 +95,7 @@ pre-commit run yamllint
 ### Terraform Testing
 
 #### Format Check
+
 ```bash
 # Check formatting (fails if changes needed)
 terraform fmt -check -recursive
@@ -102,6 +105,7 @@ terraform fmt -recursive
 ```
 
 #### Validation
+
 ```bash
 # Note: Only works on rendered .tf files, not .liquid templates
 cd rendered/aws/eks-nodegroup
@@ -110,6 +114,7 @@ terraform validate
 ```
 
 #### TFLint
+
 ```bash
 # Install tflint plugins
 tflint --init
@@ -119,6 +124,7 @@ tflint --recursive --config=.tflint.hcl
 ```
 
 #### Security Scanning
+
 ```bash
 # tfsec
 tfsec .
@@ -133,11 +139,13 @@ trivy config .
 ### Ansible Testing
 
 #### Syntax Check
+
 ```bash
 ansible-playbook aws/ansible/playbooks/create-k8s-cluster.yml --syntax-check
 ```
 
 #### Linting
+
 ```bash
 # Lint all playbooks and roles
 ansible-lint aws/ansible/playbooks/ aws/ansible/roles/
@@ -147,6 +155,7 @@ ansible-lint aws/ansible/playbooks/create-k8s-cluster.yml
 ```
 
 #### YAML Validation
+
 ```bash
 # Validate all YAML files
 yamllint .
@@ -163,6 +172,7 @@ yamllint aws/ansible/
 ```
 
 This checks:
+
 - Matching `{% if %}` / `{% endif %}` tags
 - Matching `{% for %}` / `{% endfor %}` tags
 - Common syntax errors
@@ -176,6 +186,7 @@ This checks:
 ```
 
 This checks:
+
 - snake_case naming
 - Required tags on AWS resources
 - Hardcoded values that should be variables
@@ -218,6 +229,7 @@ Check the README for CI status badges showing current build status.
 ### Issue: Pre-commit hook fails with "command not found"
 
 **Solution**: Install the missing tool
+
 ```bash
 # Example for tflint
 brew install tflint
@@ -226,12 +238,14 @@ brew install tflint
 ### Issue: Terraform validation fails on .liquid files
 
 **Solution**: Terraform validation only works on rendered `.tf` files, not `.liquid` templates. Either:
+
 - Skip validation for .liquid files (already configured)
 - Render templates first with MagicKube CLI
 
 ### Issue: Ansible-lint reports many warnings
 
 **Solution**: Warnings are acceptable, but errors must be fixed. Common fixes:
+
 ```yaml
 # Add 'when' condition for destructive tasks
 - name: Reset cluster
@@ -247,6 +261,7 @@ brew install tflint
 ### Issue: YAML linting fails on line length
 
 **Solution**: Our config allows 120 characters. For longer lines:
+
 ```yaml
 # Break long lines
 - name: Initialize cluster
@@ -259,6 +274,7 @@ brew install tflint
 ### Issue: Security scan reports false positives
 
 **Solution**: Add exemptions to `.tfsec/config.yml`:
+
 ```yaml
 exclude:
   - aws-ec2-no-public-ingress-sgr:
@@ -280,20 +296,26 @@ Current test coverage:
 ## Best Practices
 
 ### 1. Test Locally First
+
 Always run pre-commit hooks before pushing:
+
 ```bash
 pre-commit run --all-files
 ```
 
 ### 2. Fix Errors, Review Warnings
+
 - **Errors**: Must be fixed (CI will fail)
 - **Warnings**: Review and fix if reasonable
 
 ### 3. Commit Small Changes
+
 Smaller PRs are easier to test and review.
 
 ### 4. Write Idempotent Ansible
+
 Always check if resource exists before creating:
+
 ```yaml
 - name: Check if cluster initialized
   stat:
@@ -306,6 +328,7 @@ Always check if resource exists before creating:
 ```
 
 ### 5. Tag All AWS Resources
+
 ```hcl
 tags = {
   Name        = "${var.project_name}-${var.environment}-vpc"
@@ -318,6 +341,7 @@ tags = {
 ## Updating Tests
 
 ### Update Pre-Commit Hooks
+
 ```bash
 pre-commit autoupdate
 git add .pre-commit-config.yaml
@@ -329,6 +353,7 @@ git commit -m "chore: update pre-commit hooks"
 1. Create script in `scripts/`
 2. Make executable: `chmod +x scripts/your-script.sh`
 3. Add to `.pre-commit-config.yaml`:
+
    ```yaml
    - repo: local
      hooks:

@@ -37,13 +37,13 @@ for file in $tf_files; do
       ((warnings++))
     fi
   fi
-  
+
   # Check for common naming pattern
   if grep -qE 'resource[[:space:]]+"[^"]+".+"[^"]+".+\{' "$file"; then
     # Extract resource definitions and check naming
     resources=$(grep -E 'resource[[:space:]]+"[^"]+"[[:space:]]+"[^"]+"' "$file" | sed 's/resource[[:space:]]*"//' | sed 's/"[[:space:]]*"/|/' | sed 's/".*//')
-    
-    while IFS='|' read -r resource_type resource_name; do
+
+    while IFS='|' read -r _resource_type resource_name; do
       # Check if name uses snake_case
       if ! echo "$resource_name" | grep -qE '^[a-z][a-z0-9_]*$'; then
         echo -e "${YELLOW}⚠️  $file: Resource '$resource_name' should use snake_case${NC}"
@@ -69,7 +69,7 @@ for file in $tf_files; do
         # Check for required tag keys
         required_tags=("Name" "environment" "terraform")
         for tag in "${required_tags[@]}"; do
-          if ! grep -qE "$tag[[:space:]]*=" "$file" && ! grep -qE "\"$tag\"[[:space:]]*=" "$file"; then
+          if ! grep -qE "${tag}[[:space:]]*=" "$file" && ! grep -qE "\"${tag}\"[[:space:]]*=" "$file"; then
             echo -e "${YELLOW}⚠️  $file: Missing recommended tag: $tag${NC}"
             ((warnings++))
           fi

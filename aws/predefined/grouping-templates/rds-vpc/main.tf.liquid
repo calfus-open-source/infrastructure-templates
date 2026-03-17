@@ -13,7 +13,7 @@ module "vpc" {
   name        = "${var.project_name}-${var.environment}-vpc"
   environment = var.environment
   cidr        = var.vpc_cidr
-  
+
 }
 
 module "rds" {
@@ -23,9 +23,8 @@ module "rds" {
   region                  = var.region
   security_group_id       = module.vpc.default_security_group_id
   vpc_id                  = module.vpc.id
-  vpc_public_subnets      = module.vpc.public_subnets  
+  vpc_public_subnets      = module.vpc.public_subnets
   vpc_private_subnets     = module.vpc.private_subnets
   vpc_database_subnets    = module.vpc.database_subnets
   depends_on              = [ module.vpc ]
 }
-

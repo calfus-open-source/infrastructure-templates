@@ -29,7 +29,7 @@ provider "kubernetes" {
     }
   }
   {% comment %} else condition {% endcomment %}
-  {% else %}  
+  {% else %}
   provider "helm" {
     kubernetes {
     host                   = var.cluster_endpoint

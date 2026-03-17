@@ -19,7 +19,7 @@ jobs:
   tfsec:
     name: Terraform Security Scan (tfsec)
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
   checkov:
     name: Infrastructure Security Scan (Checkov)
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -72,7 +72,7 @@ jobs:
   trivy:
     name: Container & IaC Security Scan (Trivy)
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -101,30 +101,30 @@ jobs:
       - checkov
       - trivy
     if: always()
-    
+
     steps:
       - name: Create security summary
         run: |
           echo "## Security Scan Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ needs.tfsec.result }}" == "success" ]; then
             echo "✅ tfsec: Passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ tfsec: Issues found (check Security tab)" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [ "${{ needs.checkov.result }}" == "success" ]; then
             echo "✅ Checkov: Passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ Checkov: Issues found (check Security tab)" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [ "${{ needs.trivy.result }}" == "success" ]; then
             echo "✅ Trivy: Passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ Trivy: Issues found (check Security tab)" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "🔒 View detailed security findings in the **Security** tab" >> $GITHUB_STEP_SUMMARY

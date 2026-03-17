@@ -1,7 +1,7 @@
 provider "aws" {
     region     = "{{ aws_region }}"
 }
-  
+
 terraform {
   backend "s3" {
   }
@@ -15,7 +15,7 @@ data "terraform_remote_state" "output_state" {
       region = var.region
   }
 }
-    
+
 // Now you can use the master_ip output from nonprod
 output "referenced_master_ip" {
     value = data.terraform_remote_state.output_state.outputs.master_ip
