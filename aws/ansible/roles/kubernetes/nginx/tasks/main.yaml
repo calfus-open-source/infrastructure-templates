@@ -102,7 +102,8 @@
   become: yes
   become_user: kube
   shell: |
-    set -o pipefail && kubectl -n {{ argocd_namespace }} get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 --decode
+    set -o pipefail && kubectl -n {{ argocd_namespace }} get secret
+    argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 --decode
   register: kubernetes_argocd_admin_password
   changed_when: false
 
@@ -114,13 +115,16 @@
 - name: Login to ArgoCD
   become: yes
   shell: |
-    argocd login argocd.{{ hostname }} --username admin --password {{ kubernetes_argocd_admin_password.stdout }} --insecure
+    argocd login argocd.{{ hostname }} --username admin \
+    --password {{ kubernetes_argocd_admin_password.stdout }} --insecure
   register: kubernetes_argocd_login
   changed_when: false
 
 - name: Form the GitOps HTTPS clone URL
   set_fact:
-    kubernetes_gitops_https_clone_url: "https://github.com/{{ github_owner }}/{{ project_name }}-{{ 'non-prod' if environment is defined else 'prod' }}-gitops.git"
+    kubernetes_gitops_https_clone_url: "https://github.com/{{ github_owner }}/
+      {{ project_name }}-{{ 'non-prod' if environment is defined else 'prod' }}
+      -gitops.git"
 
 - name: Display the constructed GitOps HTTPS clone URL
   debug:
@@ -129,7 +133,9 @@
 - name: Add GitHub repository to ArgoCD
   become: yes
   shell: |
-    argocd repo add https://github.com/{{ github_owner }}/{{ project_name }}-{{ 'non-prod' if environment is defined else 'prod' }}-gitops.git --username {{ git_user_name }} --password {{ github_access_token }}
+    argocd repo add https://github.com/{{ github_owner }}/
+    {{ project_name }}-{{ 'non-prod' if environment is defined else 'prod' }}-gitops.git \
+    --username {{ git_user_name }} --password {{ github_access_token }}
   args:
     executable: /bin/bash
   register: kubernetes_repo_add_output
@@ -137,4 +143,5 @@
 
 - name: Debug output for repository addition
   debug:
-    msg: "Repository Addition: stdout: {{ kubernetes_repo_add_output.stdout_lines }} stderr: {{ kubernetes_repo_add_output.stderr_lines }}"
+    msg: "Repository Addition: stdout: {{ kubernetes_repo_add_output.stdout_lines }}
+      stderr: {{ kubernetes_repo_add_output.stderr_lines }}"

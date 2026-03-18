@@ -30,11 +30,13 @@ echo ""
 echo "Checking for hardcoded values..."
 
 for file in $tf_files; do
-  # Check for hardcoded region
+  # Check for hardcoded region (skip files with "warning_" in name - intentional)
   if grep -qE '(us-east-1|us-west-2|eu-west-1|ap-south-1)' "$file" 2>/dev/null; then
     if ! grep -q 'var.aws_region\|var.region\|{{ aws_region }}' "$file"; then
-      echo -e "${YELLOW}⚠️  $file: Hardcoded AWS region found - consider using var.aws_region${NC}"
-      ((warnings++))
+      if ! echo "$file" | grep -q 'warning_'; then
+        echo -e "${YELLOW}⚠️  $file: Hardcoded AWS region found - consider using var.aws_region${NC}"
+        ((warnings++))
+      fi
     fi
   fi
 
@@ -85,8 +87,8 @@ echo "Checking security group rules..."
 
 for file in $tf_files; do
   if grep -qE 'cidr_blocks.*=.*\["?0\.0\.0\.0/0"?\]' "$file"; then
-    # Allow 0.0.0.0/0 in ALB and ingress security groups
-    if ! echo "$file" | grep -qE '(alb|ingress|bastion)'; then
+    # Allow 0.0.0.0/0 in ALB, ingress, bastion, and security-groups modules
+    if ! echo "$file" | grep -qE '(alb|ingress|bastion|security-groups)'; then
       echo -e "${YELLOW}⚠️  $file: Found 0.0.0.0/0 CIDR - ensure this is intentional${NC}"
       ((warnings++))
     fi

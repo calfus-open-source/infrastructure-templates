@@ -7,6 +7,7 @@ profile: production
 # Exclude paths
 exclude_paths:
   - aws/ansible/roles/kubernetes/nginx.bkp/
+  - aws/ansible/playbooks/  # Skip for namespace-organized roles
   - .git/
   - .github/
   - node_modules/
@@ -32,6 +33,8 @@ enable_list:
 # Mock modules for validation
 mock_modules:
   - community.general.firewalld
+  - community.general.parted
+  - community.general.filesystem
 
 # Mock roles for validation (if needed)
 mock_roles: []

@@ -1,8 +1,10 @@
 ---
 - name: Load AWS credentials from ~/.aws/credentials file
   ansible.builtin.set_fact:
-    kubernetes_aws_access_key_id: "{{ lookup('ini', 'aws_access_key_id section={{ aws_profile }} file=~/.aws/credentials') }}"
-    kubernetes_aws_secret_access_key: "{{ lookup('ini', 'aws_secret_access_key section={{ aws_profile }} file=~/.aws/credentials') }}"
+    kubernetes_aws_access_key_id: "{{ lookup('ini', 'aws_access_key_id '
+      ~ 'section={{ aws_profile }} file=~/.aws/credentials') }}"
+    kubernetes_aws_secret_access_key: "{{ lookup('ini', 'aws_secret_access_key '
+      ~ 'section={{ aws_profile }} file=~/.aws/credentials') }}"
   vars:
     profile: "{{ aws_profile }}"
 
@@ -55,7 +57,10 @@
 
 - name: Split ebs_volume_device_name variable
   set_fact:
-    kubernetes_split_ebs_volume_device_name: "{{ kubernetes_ebs_volume_device_name | map('regex_replace', '\\s+', ' ') | map('split', ' ') | list }}"
+    kubernetes_split_ebs_volume_device_name: "{{ kubernetes_ebs_volume_device_name
+      | map('regex_replace', '\\s+', ' ')
+      | map('split', ' ')
+      | list }}"
 
 - name: Display split ebs_volume_device_name
   debug:
@@ -71,13 +76,18 @@
 
 - name: Loop over each EC2 volume
   ansible.builtin.set_fact:
-    kubernetes_volume_info: "{{ kubernetes_volume_info | combine({item.id: {'tag': tag, 'size': size, 'device': device, 'volume_name': volume_name}}) }}"
+    kubernetes_volume_info: "{{ kubernetes_volume_info | combine({item.id:
+      {'tag': tag, 'size': size, 'device': device,
+      'volume_name': volume_name}}) }}"
   loop: "{{ kubernetes_ec2_volumes.volumes }}"
   vars:
     device: "{{ item.attachment_set[0].device }}"
     tag: "{{ item.tags.Name | default('Unknown') }}"
     size: "{{ item.size }}G"
-    volume_name: "{{ kubernetes_split_ebs_volume_device_name | selectattr('2', 'search', item.id) | map('first') | first }}"
+    volume_name: "{{ kubernetes_split_ebs_volume_device_name
+      | selectattr('2', 'search', item.id)
+      | map('first')
+      | first }}"
   when: item.id in kubernetes_split_ebs_volume_device_name | map(attribute=2)
 
 - name: Display volume information
@@ -116,7 +126,8 @@
 
 - name: Store UUID values
   ansible.builtin.set_fact:
-    kubernetes_uuid_device: "{{ kubernetes_uuid_device | default({}) | combine({item.item.value.tag: item.stdout_lines[0]}) }}"
+    kubernetes_uuid_device: "{{ kubernetes_uuid_device | default({}) |
+      combine({item.item.value.tag: item.stdout_lines[0]}) }}"
   loop: "{{ kubernetes_uuid.results }}"
 
 - name: Debug UUIDs
