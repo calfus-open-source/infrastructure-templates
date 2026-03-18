@@ -36,7 +36,7 @@ for file in $liquid_files; do
 
   if [ "$if_count" -ne "$endif_count" ]; then
     echo -e "${RED}✗ $file: Unmatched {% if %} tags (if: $if_count, endif: $endif_count)${NC}"
-    ((errors++))
+    ((++errors))
   fi
 
   # Count opening and closing for tags
@@ -45,14 +45,14 @@ for file in $liquid_files; do
 
   if [ "$for_count" -ne "$endfor_count" ]; then
     echo -e "${RED}✗ $file: Unmatched {% for %} tags (for: $for_count, endfor: $endfor_count)${NC}"
-    ((errors++))
+    ((++errors))
   fi
 
   # Check for orphaned endif/endfor
   if grep -q '{%[[:space:]]*endif[[:space:]]*%}' "$file" 2>/dev/null || false; then
     if [ "$if_count" -eq 0 ] && [ "$endif_count" -gt 0 ]; then
       echo -e "${RED}✗ $file: Found {% endif %} without {% if %}${NC}"
-      ((errors++))
+      ((++errors))
     fi
   fi
 done
@@ -65,7 +65,7 @@ for file in $liquid_files; do
   # Check for malformed variable interpolation
   if (grep -qE '\{\{[^}]*\{' "$file" 2>/dev/null || grep -qE '\}\}[^{]*\}' "$file" 2>/dev/null) || false; then
     echo -e "${YELLOW}⚠️  $file: Possible malformed variable interpolation${NC}"
-    ((warnings++))
+    ((++warnings))
   fi
 
   # Check for single braces (might be typo)
@@ -79,7 +79,7 @@ for file in $liquid_files; do
     # - Files with jsonencode/yamlencode functions
     if ! [[ "$file" =~ \.(tf|tfvars|json|ya?ml)\.liquid$ ]] && ! (grep -qE '(<<EOF|<<-EOF|jsonencode|yamlencode)' "$file" 2>/dev/null || false); then
       echo -e "${YELLOW}⚠️  $file: Found single '{' - might be a typo${NC}"
-      ((warnings++))
+      ((++warnings))
     fi
   fi
 
@@ -90,7 +90,7 @@ for file in $liquid_files; do
       # List of known Liquid filters
       if ! echo "$filter" | grep -qE '^(replace|downcase|upcase|capitalize|strip|lstrip|rstrip|strip_html|strip_newlines|newline_to_br|escape|escape_once|url_encode|url_decode|slice|truncate|truncatewords|split|join|sort|sort_natural|reverse|uniq|compact|concat|map|where|group_by|size|first|last|abs|ceil|floor|round|plus|minus|times|divided_by|modulo|prepend|append|default|date|json)$'; then
         echo -e "${YELLOW}⚠️  $file: Unknown Liquid filter: '$filter' - verify it's supported${NC}"
-        ((warnings++))
+        ((++warnings))
       fi
     done
   fi
