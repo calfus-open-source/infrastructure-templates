@@ -141,5 +141,3 @@
     fstype: xfs
     state: mounted
   loop: "{{ kubernetes_volume_info | dict2items }}"
-  vars:
-    kubernetes_uuid_device: "{{ kubernetes_uuid_device }}"
