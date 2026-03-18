@@ -35,7 +35,7 @@ for file in $tf_files; do
     if ! grep -q 'var.aws_region\|var.region\|{{ aws_region }}' "$file"; then
       if ! echo "$file" | grep -q 'warning_'; then
         echo -e "${YELLOW}⚠️  $file: Hardcoded AWS region found - consider using var.aws_region${NC}"
-        ((warnings++))
+        ((++warnings))
       fi
     fi
   fi
@@ -49,7 +49,7 @@ for file in $tf_files; do
       # Check if name uses snake_case
       if ! echo "$resource_name" | grep -qE '^[a-z][a-z0-9_]*$'; then
         echo -e "${YELLOW}⚠️  $file: Resource '$resource_name' should use snake_case${NC}"
-        ((warnings++))
+        ((++warnings))
       fi
     done <<< "$resources"
   fi
@@ -66,14 +66,14 @@ for file in $tf_files; do
       # Check for tags block
       if ! grep -qE 'tags[[:space:]]*=' "$file"; then
         echo -e "${YELLOW}⚠️  $file: AWS resources should have tags${NC}"
-        ((warnings++))
+        ((++warnings))
       else
         # Check for required tag keys
         required_tags=("Name" "environment" "terraform")
         for tag in "${required_tags[@]}"; do
           if ! grep -qE "${tag}[[:space:]]*=" "$file" && ! grep -qE "\"${tag}\"[[:space:]]*=" "$file"; then
             echo -e "${YELLOW}⚠️  $file: Missing recommended tag: $tag${NC}"
-            ((warnings++))
+            ((++warnings))
           fi
         done
       fi
@@ -90,7 +90,7 @@ for file in $tf_files; do
     # Allow 0.0.0.0/0 in ALB, ingress, bastion, and security-groups modules
     if ! echo "$file" | grep -qE '(alb|ingress|bastion|security-groups)'; then
       echo -e "${YELLOW}⚠️  $file: Found 0.0.0.0/0 CIDR - ensure this is intentional${NC}"
-      ((warnings++))
+      ((++warnings))
     fi
   fi
 done

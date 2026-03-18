@@ -224,7 +224,7 @@ teardown() {
     [ -f "$var_file" ] || continue
 
     # Check for common variables
-    grep -q "variable \"name\"" "$var_file" && ((count++))
+    grep -q "variable \"name\"" "$var_file" && ((++count))
   done
 
   [ "$count" -ge 2 ]
@@ -236,7 +236,7 @@ teardown() {
   for main_file in "${REPO_ROOT}"/aws/modules/{rds,alb,route53,acm}/main.tf.liquid; do
     [ -f "$main_file" ] || continue
 
-    grep -q "^output" "$main_file" && ((output_count++))
+    grep -q "^output" "$main_file" && ((++output_count))
   done
 
   [ "$output_count" -ge 2 ]
