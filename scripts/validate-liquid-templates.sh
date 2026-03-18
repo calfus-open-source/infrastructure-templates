@@ -31,8 +31,8 @@ echo "Checking for unmatched Liquid tags..."
 
 for file in $liquid_files; do
   # Count opening and closing if tags
-  if_count=$(grep -o '{%[[:space:]]*if[[:space:]]' "$file" | wc -l | tr -d ' ')
-  endif_count=$(grep -o '{%[[:space:]]*endif[[:space:]]*%}' "$file" | wc -l | tr -d ' ')
+  if_count=$(grep -o '{%[[:space:]]*if[[:space:]]' "$file" 2>/dev/null | wc -l | tr -d ' ')
+  endif_count=$(grep -o '{%[[:space:]]*endif[[:space:]]*%}' "$file" 2>/dev/null | wc -l | tr -d ' ')
 
   if [ "$if_count" -ne "$endif_count" ]; then
     echo -e "${RED}✗ $file: Unmatched {% if %} tags (if: $if_count, endif: $endif_count)${NC}"
@@ -40,8 +40,8 @@ for file in $liquid_files; do
   fi
 
   # Count opening and closing for tags
-  for_count=$(grep -o '{%[[:space:]]*for[[:space:]]' "$file" | wc -l | tr -d ' ')
-  endfor_count=$(grep -o '{%[[:space:]]*endfor[[:space:]]*%}' "$file" | wc -l | tr -d ' ')
+  for_count=$(grep -o '{%[[:space:]]*for[[:space:]]' "$file" 2>/dev/null | wc -l | tr -d ' ')
+  endfor_count=$(grep -o '{%[[:space:]]*endfor[[:space:]]*%}' "$file" 2>/dev/null | wc -l | tr -d ' ')
 
   if [ "$for_count" -ne "$endfor_count" ]; then
     echo -e "${RED}✗ $file: Unmatched {% for %} tags (for: $for_count, endfor: $endfor_count)${NC}"
@@ -70,7 +70,7 @@ for file in $liquid_files; do
 
   # Check for single braces (might be typo)
   # Skip check for files that legitimately contain JSON, HCL, or YAML interpolation
-  if grep -qE '\{[^{%]' "$file"; then
+  if grep -qE '\{[^{%#]' "$file"; then
     # Filter out valid patterns in Terraform, JSON, and YAML files
     # - .tf.liquid files contain HCL code with ${var.xxx} patterns
     # - .tfvars.liquid files contain Terraform variables with {{ }} Liquid syntax
@@ -85,7 +85,7 @@ for file in $liquid_files; do
 
   # Check for undefined filter usage (common mistake)
   if grep -qE '\{\{.*\|[[:space:]]*[a-z_]+[[:space:]]*\}\}' "$file"; then
-    filters=$(grep -oE '\|[[:space:]]*([a-z_]+)' "$file" | sed 's/|[[:space:]]*//' | sort -u)
+    filters=$(grep -oE '\|[[:space:]]*([a-z_]+)' "$file" 2>/dev/null | sed 's/|[[:space:]]*//' | sort -u || true)
     for filter in $filters; do
       # List of known Liquid filters
       if ! echo "$filter" | grep -qE '^(replace|downcase|upcase|capitalize|strip|lstrip|rstrip|strip_html|strip_newlines|newline_to_br|escape|escape_once|url_encode|url_decode|slice|truncate|truncatewords|split|join|sort|sort_natural|reverse|uniq|compact|concat|map|where|group_by|size|first|last|abs|ceil|floor|round|plus|minus|times|divided_by|modulo|prepend|append|default|date|json)$'; then
