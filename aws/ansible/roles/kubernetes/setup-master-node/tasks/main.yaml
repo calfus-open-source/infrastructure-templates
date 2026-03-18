@@ -8,6 +8,7 @@
 - name: Pull kubeadm config images
   command: kubeadm config images pull
   register: kubernetes_kubelet_output
+  changed_when: false
 
 - name: debug output
   ansible.builtin.debug:
@@ -22,6 +23,7 @@
   command: "kubeadm reset --force"
   register: kubernetes_reset_cluster
   when: not kubernetes_admin_conf.stat.exists
+  changed_when: true
 
 - name: Pause for 10 seconds to make sure reset is complete
   ansible.builtin.pause:
@@ -59,6 +61,7 @@
   when: not kubernetes_admin_conf.stat.exists
   environment:
     no_proxy: "$no_proxy,.svc,.svc.cluster.local"
+  changed_when: true
 
 - name: debug output
   ansible.builtin.debug:
@@ -129,12 +132,14 @@
   shell: kubectl apply -f $HOME/weave-daemonset-k8s.yaml
   args:
     chdir: $HOME
+  changed_when: true
 
 - name: Get the token for joining the worker nodes
   become: yes
   become_user: kube
   command: kubeadm token create --print-join-command
   register: kubernetes_join_command
+  changed_when: false
 
 - name: output join command
   ansible.builtin.debug:

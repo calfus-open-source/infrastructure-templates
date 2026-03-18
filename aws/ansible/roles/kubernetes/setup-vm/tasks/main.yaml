@@ -147,6 +147,7 @@
 - name: Check the uptime prior reboot
   command: uptime
   register: kubernetes_uptime_pre_reboot
+  changed_when: false
 
 - name: Debug output for uptime before reboot
   ansible.builtin.debug:
@@ -157,6 +158,7 @@
   async: 10 # Do not care for 10 sec
   poll: 0 # Fire & Forget
   when: not ansible_check_mode
+  changed_when: false
 
 - name: Wait for connection (600s default)
   ansible.builtin.wait_for_connection:
@@ -164,6 +166,7 @@
 - name: Check the uptime post reboot
   command: uptime
   register: kubernetes_uptime_post_reboot
+  changed_when: false
 
 - name: Debug output for uptime after reboot
   ansible.builtin.debug:

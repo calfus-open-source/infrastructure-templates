@@ -293,6 +293,85 @@ Current test coverage:
 | Ansible idempotency | Manual | Documented best practices |
 | Integration tests | 0% | Too expensive (manual testing) |
 
+## Unit Testing
+
+Infrastructure-templates includes comprehensive unit tests for shell scripts and Terraform modules.
+
+### Running Unit Tests
+
+```bash
+# Run all unit tests
+make test
+
+# Or from tests directory
+cd tests && make test
+
+# Run specific test suite
+make test-scripts    # Shell script validation tests
+make test-terraform  # Terraform module tests
+
+# Run with verbose output
+make test-verbose
+
+# Run a single test file
+make test-one FILE=tests/unit/scripts/test_validate_liquid_templates.bats
+```
+
+### Unit Test Coverage
+
+Current unit test coverage:
+
+| Component | Tests | Status |
+|-----------|-------|--------|
+| `scripts/validate-liquid-templates.sh` | 24 | ✅ P0 |
+| `scripts/check-terraform-naming.sh` | 6 | ✅ P0 |
+| Terraform module schemas | — | ⏳ P1 |
+| Ansible role idempotency | — | ⏳ P1 |
+| Liquid template rendering | — | ⏳ P1 |
+
+### Writing Tests
+
+Tests use **bats-core** (Bash Automated Testing System):
+
+```bash
+# Install bats-core
+brew install bats-core  # macOS
+# or
+sudo apt-get install bats  # Linux
+
+# Run tests locally
+make test
+
+# View test documentation
+cat tests/README.md
+```
+
+Example test:
+
+```bash
+@test "validates terraform naming conventions" {
+  cat > "$TEST_DIR/test.tf.liquid" <<'EOF'
+resource "aws_vpc" "main_vpc" {
+  cidr_block = "10.0.0.0/16"
+}
+EOF
+
+  cd "$TEST_DIR"
+  run bash "$CHECKER"
+  [ "$status" -eq 0 ]  # Should succeed
+}
+```
+
+For complete test writing guide, see [tests/README.md](../tests/README.md).
+
+### CI Unit Tests
+
+Unit tests automatically run on:
+
+- ✅ Pull requests (GitHub Actions)
+- ✅ Main branch pushes
+- ✅ Local development (`make test`)
+
 ## Best Practices
 
 ### 1. Test Locally First

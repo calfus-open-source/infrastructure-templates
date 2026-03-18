@@ -11,6 +11,7 @@
     cmd: "set -o pipefail && lsblk -o PATH,SIZE,SERIAL | grep ' vol' | sed 's/ vol/ vol-/'"
     executable: /bin/bash
   register: kubernetes_lsblk
+  changed_when: false
 
 - name: Store EBS volume device name
   ansible.builtin.set_fact:
@@ -111,6 +112,7 @@
   loop: "{{ kubernetes_volume_info | dict2items }}"
   vars:
     mount_point: "/{{ item.value.tag }}"
+  changed_when: false
 
 - name: Store UUID values
   ansible.builtin.set_fact:

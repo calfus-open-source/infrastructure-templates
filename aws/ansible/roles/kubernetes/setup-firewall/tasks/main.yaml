@@ -15,20 +15,29 @@
 
 - name: 2.3.status_firewalld
   command: systemctl status firewalld.service
+  changed_when: false
 
 - name: 2.4.add_firewall_rules_public
   command: firewall-cmd --permanent --zone=public --add-port={{ item }}
   loop: "{{ ports_to_open }}"
+  changed_when: "'success' in kubernetes_firewall_public.stdout or kubernetes_firewall_public.rc == 0"
+  register: kubernetes_firewall_public
 
 - name: 2.4.add_firewall_rules_trusted
   command: firewall-cmd --permanent --zone=trusted --add-port={{ item }}
   loop: "{{ ports_to_open }}"
+  changed_when: "'success' in kubernetes_firewall_trusted.stdout or kubernetes_firewall_trusted.rc == 0"
+  register: kubernetes_firewall_trusted
 
 - name: add service cidr in trusted zone
   command: firewall-cmd --permanent --zone=trusted --add-source={{ service_cidr }}
+  changed_when: "'success' in kubernetes_firewall_service_cidr.stdout or kubernetes_firewall_service_cidr.rc == 0"
+  register: kubernetes_firewall_service_cidr
 
 - name: add pod cidr in trusted zone
   command: firewall-cmd --permanent --zone=trusted --add-source={{ pod_network_cidr }}
+  changed_when: "'success' in kubernetes_firewall_pod_cidr.stdout or kubernetes_firewall_pod_cidr.rc == 0"
+  register: kubernetes_firewall_pod_cidr
 
 - name: Get list of master nodes
   set_fact:
@@ -44,10 +53,15 @@
 - name: add master hosts in trusted zone
   command: firewall-cmd --permanent --zone=trusted --add-source={{ item }}
   loop: "{{ kubernetes_master_ips }}"
+  changed_when: "'success' in kubernetes_firewall_master_hosts.stdout or kubernetes_firewall_master_hosts.rc == 0"
+  register: kubernetes_firewall_master_hosts
 
 - name: add worker hosts in trusted zone
   command: firewall-cmd --permanent --zone=trusted --add-source={{ item }}
   loop: "{{ kubernetes_worker_ips }}"
+  changed_when: "'success' in kubernetes_firewall_worker_hosts.stdout or kubernetes_firewall_worker_hosts.rc == 0"
+  register: kubernetes_firewall_worker_hosts
 
 - name: 2.6.reload_firewall
   command: firewall-cmd --reload
+  changed_when: false

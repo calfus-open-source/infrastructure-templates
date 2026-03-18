@@ -18,6 +18,7 @@
   command: "kubeadm reset --force"
   register: kubernetes_reset_cluster
   when: not kubernetes_kubelet_conf.stat.exists
+  changed_when: true
 
 - name: Copy join command from Ansiblehost to the worker nodes.
   copy:
@@ -32,6 +33,7 @@
   when: not kubernetes_kubelet_conf.stat.exists
   environment:
     no_proxy: "$no_proxy,.svc,.svc.cluster.local"
+  changed_when: true
 
 - name: debug output
   ansible.builtin.debug:
@@ -78,6 +80,7 @@
   args:
     executable: /bin/bash
   register: kubernetes_label_output
+  changed_when: \"'labeled' in kubernetes_label_output.stdout or kubernetes_label_output.rc == 0\"
 
 - name: debug output
   ansible.builtin.debug:

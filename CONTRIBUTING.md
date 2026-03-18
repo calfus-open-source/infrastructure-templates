@@ -94,6 +94,29 @@ yamllint aws/ansible/
 ./scripts/check-terraform-naming.sh
 ```
 
+#### Run Unit Tests
+
+```bash
+# Run all unit tests
+make test
+
+# Or navigate to tests directory
+cd tests
+make test
+
+# Run specific test suite
+make test-scripts
+make test-terraform
+
+# Run with verbose output
+make test-verbose
+
+# Run a single test file
+make test-one FILE=tests/unit/scripts/test_validate_liquid_templates.bats
+```
+
+For more details on unit testing, see [tests/README.md](tests/README.md).
+
 ### 5. Commit Your Changes
 
 Write clear, descriptive commit messages:

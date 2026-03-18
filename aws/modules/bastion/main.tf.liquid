@@ -15,9 +15,9 @@ data "aws_ami" "bastion_host_ami" {
     }
   }
 
-  resource "aws_launch_template" "bastion-host-launch-template" {
+  resource "aws_launch_template" "bastion_host_launch_template" {
     name_prefix             = "${ var.project_name }-${ var.environment }-bastion"
-    description             = "bastion-host-launch-template"
+    description             = "bastion_host_launch_template"
     disable_api_termination = "false"
     image_id                = data.aws_ami.bastion_host_ami.id
     instance_type           = "{{ bastion_instance_type }}"
@@ -25,10 +25,10 @@ data "aws_ami" "bastion_host_ami" {
     # vpc_security_group_ids  = [var.default_security_group_id]
   }
 
-  resource "aws_instance" "bastion-host" {
+  resource "aws_instance" "bastion_host" {
     count = {{ bastion_instance_count }}
     launch_template {
-      id = aws_launch_template.bastion-host-launch-template.id
+      id = aws_launch_template.bastion_host_launch_template.id
       version = "$Latest"
     }
 
@@ -41,11 +41,13 @@ data "aws_ami" "bastion_host_ami" {
       Name = "${ var.project_name }-${ var.environment }-bastion"
       Group = "bastion"
       Project = "${ var.project_name }-${ var.environment }"
+      environment = var.environment
+      terraform = "true"
     }
   }
 
-  output "k8s-bastion-ips" {
-    value = [for host in aws_instance.bastion-host:
+  output "k8s_bastion_ips" {
+    value = [for host in aws_instance.bastion_host:
       host.public_ip
     ]
   }

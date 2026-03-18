@@ -15,8 +15,8 @@ NC='\033[0m' # No Color
 errors=0
 warnings=0
 
-# Find all .liquid files
-liquid_files=$(find . -name "*.liquid" -not -path "./.git/*" -not -path "./node_modules/*")
+# Find all .liquid files, excluding test fixtures
+liquid_files=$(find . -name "*.liquid" -not -path "./.git/*" -not -path "./node_modules/*" -not -path "./tests/fixtures/*" -not -path "./tests/unit/fixtures/*")
 
 if [ -z "$liquid_files" ]; then
   echo -e "${YELLOW}⚠️  No .liquid files found${NC}"
@@ -69,9 +69,15 @@ for file in $liquid_files; do
   fi
 
   # Check for single braces (might be typo)
+  # Skip check for files that legitimately contain JSON, HCL, or YAML interpolation
   if grep -qE '\{[^{%]' "$file"; then
-    # Filter out valid JSON/HCL syntax in heredocs or strings
-    if ! grep -qE '(<<EOF|<<-EOF|jsonencode|yamlencode)' "$file"; then
+    # Filter out valid patterns in Terraform, JSON, and YAML files
+    # - .tf.liquid files contain HCL code with ${var.xxx} patterns
+    # - .tfvars.liquid files contain Terraform variables with {{ }} Liquid syntax
+    # - .json.liquid files contain JSON with ${...} references
+    # - .yml.liquid files contain YAML with similar patterns
+    # - Files with jsonencode/yamlencode functions
+    if ! [[ "$file" =~ \.(tf|tfvars|json|ya?ml)\.liquid$ ]] && ! grep -qE '(<<EOF|<<-EOF|jsonencode|yamlencode)' "$file"; then
       echo -e "${YELLOW}⚠️  $file: Found single '{' - might be a typo${NC}"
       ((warnings++))
     fi

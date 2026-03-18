@@ -11,3 +11,5 @@
   become: yes
   become_user: kube
   command: kubectl apply -f $HOME/storage-class.yaml
+  changed_when: "'created' in kubernetes_storage_apply.stdout or 'configured' in kubernetes_storage_apply.stdout"
+  register: kubernetes_storage_apply

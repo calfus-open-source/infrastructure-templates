@@ -5,6 +5,7 @@
       curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ kube_version }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg --yes
   args:
     executable: /bin/bash
+  changed_when: false
 
 - name: Create kubernetes repo file
   file:

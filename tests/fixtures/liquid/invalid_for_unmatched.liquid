@@ -1,0 +1,7 @@
+# Invalid Liquid template - unmatched for tag
+{% for index in subnet_indices %}
+resource "aws_subnet" "main" {
+  vpc_id            = aws_vpc.main.id
+  availability_zone = "us-east-1{{ abcs[index] }}"
+}
+# Missing endfor here - intentional error for testing

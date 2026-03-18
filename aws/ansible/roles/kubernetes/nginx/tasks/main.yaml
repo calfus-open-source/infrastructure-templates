@@ -116,6 +116,7 @@
   shell: |
     argocd login argocd.{{ hostname }} --username admin --password {{ kubernetes_argocd_admin_password.stdout }} --insecure
   register: kubernetes_argocd_login
+  changed_when: false
 
 - name: Form the GitOps HTTPS clone URL
   set_fact:
@@ -132,6 +133,7 @@
   args:
     executable: /bin/bash
   register: kubernetes_repo_add_output
+  changed_when: "'added' in kubernetes_repo_add_output.stdout or 'repository' in kubernetes_repo_add_output.stdout"
 
 - name: Debug output for repository addition
   debug:

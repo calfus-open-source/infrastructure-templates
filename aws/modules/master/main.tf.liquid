@@ -14,9 +14,9 @@ data "aws_ami" "master_host_ami" {
     }
   }
 
-  resource "aws_launch_template" "master-host-launch-template" {
+  resource "aws_launch_template" "master_host_launch_template" {
     name_prefix                 = "${ var.project_name }-${ var.environment }-master"
-    description                 = "master-host-launch-template"
+    description                 = "master_host_launch_template"
     disable_api_termination     = "false"
     image_id                    = data.aws_ami.master_host_ami.id
     instance_type               = "{{ master_instance_type }}"
@@ -24,10 +24,10 @@ data "aws_ami" "master_host_ami" {
     # vpc_security_group_ids      = [var.default_security_group_id]
   }
 
-  resource "aws_instance" "master-host" {
+  resource "aws_instance" "master_host" {
     count = {{ master_instance_count }}
     launch_template {
-      id = aws_launch_template.master-host-launch-template.id
+      id = aws_launch_template.master_host_launch_template.id
       version = "$Latest"
     }
 
@@ -38,6 +38,8 @@ data "aws_ami" "master_host_ami" {
       Name = "${ var.project_name }-${ var.environment }-master"
       Group = "k8s-master"
       Project = "${ var.project_name }-${ var.environment }"
+      environment = var.environment
+      terraform = "true"
     }
 
     ebs_block_device {
@@ -59,12 +61,12 @@ data "aws_ami" "master_host_ami" {
     }
   }
 
-  output "k8s-master-ids" {
-    value = aws_instance.master-host.*.id
+  output "k8s_master_ids" {
+    value = aws_instance.master_host.*.id
   }
 
-  output "k8s-master-ips" {
-    value = [for host in aws_instance.master-host:
+  output "k8s_master_ips" {
+    value = [for host in aws_instance.master_host:
       host.private_ip
     ]
   }

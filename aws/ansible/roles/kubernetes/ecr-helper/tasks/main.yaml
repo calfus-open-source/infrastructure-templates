@@ -6,12 +6,14 @@
   command: kubectl get namespace {{ namespace }}
   register: kubernetes_namespace_check
   failed_when: false
+  changed_when: false
 
 - name: Create the namespace if it does not exist
   become: yes
   become_user: kube
   command: kubectl create namespace {{ namespace }}
   when: kubernetes_namespace_check.rc != 0
+  changed_when: true
 
 - name: Get ECR login password
   become: yes
@@ -21,18 +23,22 @@
     AWS_SECRET_ACCESS_KEY: "{{ aws_secret_access_key }}"
   command: aws ecr get-login-password --region {{ aws_region }}
   register: kubernetes_ecr_login_password
+  changed_when: false
 
 - name: Delete existing Kubernetes secret
   become: yes
   become_user: kube
   command: kubectl delete secret -n {{ namespace }} rcred
   failed_when: false
+  changed_when: "'deleted' in kubernetes_delete_secret.stdout or kubernetes_delete_secret.rc == 0"
+  register: kubernetes_delete_secret
 
 - name: Create new Kubernetes secret
   become: yes
   become_user: kube
   command: kubectl create secret docker-registry rcred --docker-server={{ accountId }}.dkr.ecr.{{ aws_region }}.amazonaws.com --docker-username=AWS --namespace={{ namespace }} --docker-password={{ kubernetes_ecr_login_password.stdout }}
   failed_when: false
+  changed_when: true
 
 - name: Find YAML files
   find:
@@ -75,6 +81,8 @@
   args:
     chdir: /tmp/
   loop: "{{ kubernetes_found_files.files }}"
+  changed_when: "'created' in kubernetes_apply_configs.stdout or 'configured' in kubernetes_apply_configs.stdout"
+  register: kubernetes_apply_configs
 
 - name: Clean up temporary files
   file:

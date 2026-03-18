@@ -72,13 +72,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: '3.11'
 
       - name: Install Ansible and ansible-lint
         run: |
           pip install ansible==9.1.0 ansible-lint==6.22.1
+
+      - name: Install Ansible Collections
+        run: |
+          ansible-galaxy collection install community.general --force
 
       - name: Run ansible-lint
         run: |
@@ -94,10 +98,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.1
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: '3.11'
 

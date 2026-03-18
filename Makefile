@@ -36,7 +36,9 @@ ACTIVATE := source $(VENV_BIN)/activate &&
 	lint-all security-scan pre-commit \
 	check ci \
 	setup clean update-deps \
-	lint-fix lint-summary
+	lint-fix lint-summary \
+	test test-unit test-scripts test-terraform test-ansible test-verbose test-tap test-one \
+	check-deps status list-tests fixtures
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Help
@@ -44,8 +46,11 @@ ACTIVATE := source $(VENV_BIN)/activate &&
 
 help: ## Show this help
 	@printf "\n$(BOLD)$(CYAN)  infrastructure-templates — Make Targets$(RESET)\n\n"
-	@printf "$(BOLD)  Testing$(RESET)$(DIM) (individual linters)$(RESET)\n"
-	@grep -E '^(lint-ansible|lint-terraform|lint-yaml|lint-shell|lint-markdown|validate-liquid|check-naming):.*?## ' $(MAKEFILE_LIST) | \
+	@printf "$(BOLD)  Testing$(RESET)$(DIM) (unit tests + linters)$(RESET)\n"
+	@grep -E '^(test|test-unit|test-scripts|test-terraform|test-ansible|test-verbose|test-tap|lint-ansible|lint-terraform|lint-yaml|lint-shell|lint-markdown|validate-liquid|check-naming):.*?## ' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "    $(CYAN)%-22s$(RESET) %s\n", $$1, $$2}'
+	@printf "\n$(BOLD)  Test Management$(RESET)\n"
+	@grep -E '^(test-one|check-deps|status|list-tests|fixtures):.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "    $(CYAN)%-22s$(RESET) %s\n", $$1, $$2}'
 	@printf "\n$(BOLD)  Quality$(RESET)$(DIM) (aggregated checks)$(RESET)\n"
 	@grep -E '^(lint-all|security-scan|pre-commit):.*?## ' $(MAKEFILE_LIST) | \
@@ -62,8 +67,48 @@ help: ## Show this help
 	@printf "\n"
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Testing — individual linters
+# Testing — unit tests + individual linters
 # ═══════════════════════════════════════════════════════════════════════════
+
+test: ## Run unit tests (shell scripts, terraform modules)
+	@printf "\n$(SEP)\n$(BOLD)$(CYAN)  Unit Tests$(RESET)\n$(SEP)\n"
+	@export ROOT_DIR=$(ROOT_DIR) SCRIPTS=$(SCRIPTS) && $(MAKE) -C tests test && \
+		printf "$(PASS)  Unit Tests\n" || \
+		{ printf "$(FAIL)  Unit Tests\n"; exit 1; }
+
+# Test delegation targets — forward to tests/Makefile
+test-unit: ## Run all unit tests (scripts + terraform)
+	@$(MAKE) -C tests test-unit
+
+test-scripts: ## Run shell script validation tests
+	@$(MAKE) -C tests test-scripts
+
+test-terraform: ## Run terraform module validation tests
+	@$(MAKE) -C tests test-terraform
+
+test-ansible: ## Run ansible role validation tests
+	@$(MAKE) -C tests test-ansible
+
+test-verbose: ## Run all tests with verbose output
+	@$(MAKE) -C tests test-verbose
+
+test-tap: ## Run tests with TAP output
+	@$(MAKE) -C tests test-tap
+
+test-one: ## Run a single test file (usage: make test-one FILE=path/to/test.bats)
+	@$(MAKE) -C tests test-one FILE=$(FILE)
+
+check-deps: ## Check for required test dependencies
+	@$(MAKE) -C tests check-deps
+
+status: ## Show test environment status
+	@$(MAKE) -C tests status
+
+list-tests: ## List all available test files
+	@$(MAKE) -C tests list-tests
+
+fixtures: ## List test fixtures
+	@$(MAKE) -C tests fixtures
 
 lint-ansible: ## Run ansible-lint on Ansible roles & playbooks
 	@printf "\n$(SEP)\n$(BOLD)$(CYAN)  Ansible Lint$(RESET)\n$(SEP)\n"
@@ -209,7 +254,7 @@ setup: ## Install dependencies, pre-commit hooks, and collections
 	@test -d $(VENV) || python3 -m venv $(VENV)
 	@$(ACTIVATE) pip install --quiet --upgrade pip
 	@$(ACTIVATE) pip install --quiet ansible-lint ansible-core yamllint
-	@$(ACTIVATE) ansible-galaxy collection install ansible.posix --force || true
+	@$(ACTIVATE) ansible-galaxy collection install ansible.posix community.general --force || true
 	@pre-commit install
 	@printf "$(PASS)  Setup complete\n"
 

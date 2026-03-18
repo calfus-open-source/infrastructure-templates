@@ -13,6 +13,7 @@
   args:
     chdir: $HOME
     executable: /bin/bash
+  changed_when: true
 
 - name: Install helm
   shell: |
@@ -22,6 +23,7 @@
   args:
     executable: /bin/bash
   register: kubernetes_helm_install
+  changed_when: "'helm' in kubernetes_helm_install.stdout"
 
 - name: debug output
   ansible.builtin.debug:

@@ -39,7 +39,7 @@ output "ingress" {
   value = aws_security_group.ingress.id
 }
 
-resource "aws_security_group" "backend-ingress" {
+resource "aws_security_group" "backend_ingress" {
   name   = "${var.name}-${var.environment}-backend-ingress-sg"
   vpc_id = var.vpc_id
 
@@ -60,6 +60,6 @@ resource "aws_security_group" "backend-ingress" {
   }
 }
 
-output "backend-ingress" {
-  value = aws_security_group.backend-ingress.id
+output "backend_ingress" {
+  value = aws_security_group.backend_ingress.id
 }

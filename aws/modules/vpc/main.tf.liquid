@@ -37,6 +37,7 @@ module "vpc" {
   }
 
   tags = {
+    "Name"           = "${var.name}-${var.environment}-vpc"
     "product"        = var.name
     "environment"    = var.environment
     "role"           = "networking"

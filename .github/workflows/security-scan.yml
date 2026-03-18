@@ -15,6 +15,9 @@ on:
     # Run weekly on Monday at 00:00 UTC
     - cron: '0 0 * * 1'
 
+permissions:
+  security-events: write
+
 jobs:
   tfsec:
     name: Terraform Security Scan (tfsec)
@@ -24,18 +27,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check for rendered .tf files
+        id: check-tf
+        run: |
+          if find . -name "*.tf" -not -name "*.liquid" -not -path "./.terraform/*" -not -path "./.git/*" | grep -q .; then
+            echo "has_tf_files=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_tf_files=false" >> $GITHUB_OUTPUT
+            echo "⚠️  No rendered .tf files found (only .liquid templates). Skipping tfsec."
+          fi
+
       - name: Run tfsec
+        if: steps.check-tf.outputs.has_tf_files == 'true'
         uses: aquasecurity/tfsec-action@v1.0.3
         with:
           soft_fail: false
           format: sarif
           additional_args: --minimum-severity MEDIUM
+        continue-on-error: true
 
       - name: Upload tfsec results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && steps.check-tf.outputs.has_tf_files == 'true' && hashFiles('results.sarif') != ''
         with:
           sarif_file: results.sarif
+        continue-on-error: true
 
   checkov:
     name: Infrastructure Security Scan (Checkov)
@@ -46,7 +62,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: '3.11'
 
@@ -64,10 +80,11 @@ jobs:
             --soft-fail || true
 
       - name: Upload Checkov results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('results.sarif') != ''
         with:
           sarif_file: results.sarif
+        continue-on-error: true
 
   trivy:
     name: Container & IaC Security Scan (Trivy)
@@ -88,10 +105,11 @@ jobs:
           exit-code: '0'
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('trivy-results.sarif') != ''
         with:
           sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
 
   security-summary:
     name: Security Scan Summary

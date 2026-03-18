@@ -16,6 +16,7 @@
   shell: |
     sudo modprobe overlay
     sudo modprobe br_netfilter
+  changed_when: false
 
 - name: Set system configurations for Kubernetes networking
   file:
@@ -34,6 +35,8 @@
 
 - name: Apply new system settings
   command: sudo sysctl --system
+  changed_when: "'Applying' in kubernetes_sysctl_apply.stdout or kubernetes_sysctl_apply.rc == 0"
+  register: kubernetes_sysctl_apply
 
 - name: Disable swappiness and configure sysctl
   ansible.posix.sysctl:
@@ -119,6 +122,7 @@
   args:
     executable: /bin/bash
   register: kubernetes_containerd_config
+  changed_when: true
 
 - name: Create crictl.yaml file
   file:
@@ -140,3 +144,4 @@
   shell: |
     swapoff -a
     sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+  changed_when: true

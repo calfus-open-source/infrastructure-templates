@@ -14,9 +14,9 @@ data "aws_ami" "worker_host_ami" {
     }
   }
 
-  resource "aws_launch_template" "worker-host-launch-template" {
+  resource "aws_launch_template" "worker_host_launch_template" {
     name_prefix                 = "${ var.project_name }-${ var.environment }-worker"
-    description                 = "worker-host-launch-template"
+    description                 = "worker_host_launch_template"
     disable_api_termination     = "false"
     image_id                    = data.aws_ami.worker_host_ami.id
     instance_type               = "{{ worker_instance_type }}"
@@ -24,10 +24,10 @@ data "aws_ami" "worker_host_ami" {
     # vpc_security_group_ids      = [var.default_security_group_id]
   }
 
-  resource "aws_instance" "worker-host" {
+  resource "aws_instance" "worker_host" {
     count = {{ worker_instance_count}}
     launch_template {
-      id = aws_launch_template.worker-host-launch-template.id
+      id = aws_launch_template.worker_host_launch_template.id
       version = "$Latest"
     }
 
@@ -38,6 +38,8 @@ data "aws_ami" "worker_host_ami" {
       Name = "${ var.project_name }-${ var.environment }-worker"
       Group = "k8s-worker"
       Project = "${ var.project_name }-${ var.environment }"
+      environment = var.environment
+      terraform = "true"
     }
 
     ebs_block_device {

@@ -5,13 +5,20 @@ resource "aws_lb" "alb" {
   security_groups    = [var.ingress_security_group_id]
   subnets            = var.vpc_public_subnets
   enable_deletion_protection = false
+  tags = {
+    "Name"           = "${var.name}-${var.environment}-alb"
+    "product"        = var.name
+    "environment"    = var.environment
+    "role"           = "networking"
+    "terraform"      = "true"
+  }
 }
 
 output "ingress_alb_dns_name" {
   value = aws_lb.alb.dns_name
 }
 
-resource "aws_route53_record" "argocd-cname" {
+resource "aws_route53_record" "argocd_cname" {
   zone_id = var.route53_zoneid
   name    = "argocd.${var.domain_name}"
   type    = "CNAME"
@@ -19,7 +26,7 @@ resource "aws_route53_record" "argocd-cname" {
   records = [aws_lb.alb.dns_name]
 }
 
-resource "aws_route53_record" "app-alias" {
+resource "aws_route53_record" "app_alias" {
   zone_id = var.route53_zoneid
   name    = "${var.domain_name}"
   type    = "A"
@@ -51,6 +58,13 @@ resource "aws_lb_target_group" "tg_master" {
     healthy_threshold   = 3
     unhealthy_threshold = 3
   }
+  tags = {
+    "Name"           = "${var.name}-${var.environment}-tg-master"
+    "product"        = var.name
+    "environment"    = var.environment
+    "role"           = "networking"
+    "terraform"      = "true"
+  }
 }
 
 # Target group for worker nodes with target_type set to "ip"
@@ -68,6 +82,13 @@ resource "aws_lb_target_group" "tg_worker" {
     timeout             = 5
     healthy_threshold   = 3
     unhealthy_threshold = 3
+  }
+  tags = {
+    "Name"           = "${var.name}-${var.environment}-tg-worker"
+    "product"        = var.name
+    "environment"    = var.environment
+    "role"           = "networking"
+    "terraform"      = "true"
   }
 }
 

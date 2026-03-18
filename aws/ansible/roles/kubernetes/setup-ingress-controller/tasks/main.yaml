@@ -31,6 +31,7 @@
   args:
     executable: /bin/bash
   register: kubernetes_ingress_install
+  changed_when: "'deployed' in kubernetes_ingress_install.stdout or 'upgraded' in kubernetes_ingress_install.stdout"
 
 - name: Debug output
   ansible.builtin.debug:
@@ -65,6 +66,8 @@
   shell: |
     helm repo add argo https://argoproj.github.io/argo-helm
     helm repo update
+  changed_when: "'added' in kubernetes_argocd_helm_add.stdout or 'replaced' in kubernetes_argocd_helm_add.stdout"
+  register: kubernetes_argocd_helm_add
 
 - name: Deploy ArgoCD helm chart
   become: yes
@@ -75,6 +78,7 @@
   args:
     executable: /bin/bash
   register: kubernetes_argocd_install
+  changed_when: "'deployed' in kubernetes_argocd_install.stdout or 'upgraded' in kubernetes_argocd_install.stdout"
 
 - name: Debug output
   ansible.builtin.debug:

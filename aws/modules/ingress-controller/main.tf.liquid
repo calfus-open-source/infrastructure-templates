@@ -44,7 +44,7 @@ data "http" "iam_policy_for_ingress_controller" {
   url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.5.4/docs/install/iam_policy.json"
 }
 
-resource "aws_iam_role" "aws-load-balancer-controller-role" {
+resource "aws_iam_role" "aws_load_balancer_controller_role" {
   name = "${var.name}-aws-load-balancer-controller-role"
 
   assume_role_policy = jsonencode({
@@ -67,29 +67,33 @@ resource "aws_iam_role" "aws-load-balancer-controller-role" {
   })
 
   tags = {
+    "Name"           = "${var.name}-aws-load-balancer-controller-role"
     "product"        = var.name
+    "environment"    = var.environment
     "role"           = "networking"
     "terraform"      = "true"
   }
 }
 
-resource "aws_iam_policy" "aws-load-balancer-controller-iam-policy" {
+resource "aws_iam_policy" "aws_load_balancer_controller_iam_policy" {
   name        = "${var.name}-aws-load-balancer-controller-iam-policy"
   description = "Load balancer controller policy"
   policy      = data.http.iam_policy_for_ingress_controller.response_body
   tags = {
+    "Name"           = "${var.name}-aws-load-balancer-controller-iam-policy"
     "product"        = var.name
+    "environment"    = var.environment
     "role"           = "networking"
     "terraform"      = "true"
   }
 }
 
-resource "aws_iam_role_policy_attachment" "aws-load-balancer-controller-policy-attach" {
-  policy_arn = aws_iam_policy.aws-load-balancer-controller-iam-policy.arn
-  role       = aws_iam_role.aws-load-balancer-controller-role.name
+resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller_policy_attach" {
+  policy_arn = aws_iam_policy.aws_load_balancer_controller_iam_policy.arn
+  role       = aws_iam_role.aws_load_balancer_controller_role.name
 }
 
-resource "kubernetes_service_account" "aws-load-balancer-controller-service-account" {
+resource "kubernetes_service_account" "aws_load_balancer_controller_service_account" {
     metadata {
       labels = {
         "app.kubernetes.io/component" = "controller",

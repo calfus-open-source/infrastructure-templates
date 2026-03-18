@@ -2,6 +2,7 @@ resource "aws_codecommit_repository" "codecommit_repo" {
   repository_name = "${var.name}-${var.appType}-app"
   description     = "CodeCommit repository for ${var.appType}"
   tags = {
+    "Name"           = "${var.name}-${var.appType}-app"
     "product"        = var.name
     "environment"    = var.environment
     "role"           = "cicd"
