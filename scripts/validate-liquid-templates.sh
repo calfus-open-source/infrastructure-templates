@@ -49,7 +49,7 @@ for file in $liquid_files; do
   fi
 
   # Check for orphaned endif/endfor
-  if grep -q '{%[[:space:]]*endif[[:space:]]*%}' "$file"; then
+  if grep -q '{%[[:space:]]*endif[[:space:]]*%}' "$file" 2>/dev/null || false; then
     if [ "$if_count" -eq 0 ] && [ "$endif_count" -gt 0 ]; then
       echo -e "${RED}✗ $file: Found {% endif %} without {% if %}${NC}"
       ((errors++))
@@ -63,28 +63,28 @@ echo "Checking for common syntax errors..."
 
 for file in $liquid_files; do
   # Check for malformed variable interpolation
-  if grep -qE '\{\{[^}]*\{' "$file" || grep -qE '\}\}[^{]*\}' "$file"; then
+  if (grep -qE '\{\{[^}]*\{' "$file" 2>/dev/null || grep -qE '\}\}[^{]*\}' "$file" 2>/dev/null) || false; then
     echo -e "${YELLOW}⚠️  $file: Possible malformed variable interpolation${NC}"
     ((warnings++))
   fi
 
   # Check for single braces (might be typo)
   # Skip check for files that legitimately contain JSON, HCL, or YAML interpolation
-  if grep -qE '\{[^{%#]' "$file"; then
+  if grep -qE '\{[^{%#]' "$file" 2>/dev/null || false; then
     # Filter out valid patterns in Terraform, JSON, and YAML files
     # - .tf.liquid files contain HCL code with ${var.xxx} patterns
     # - .tfvars.liquid files contain Terraform variables with {{ }} Liquid syntax
     # - .json.liquid files contain JSON with ${...} references
     # - .yml.liquid files contain YAML with similar patterns
     # - Files with jsonencode/yamlencode functions
-    if ! [[ "$file" =~ \.(tf|tfvars|json|ya?ml)\.liquid$ ]] && ! grep -qE '(<<EOF|<<-EOF|jsonencode|yamlencode)' "$file"; then
+    if ! [[ "$file" =~ \.(tf|tfvars|json|ya?ml)\.liquid$ ]] && ! (grep -qE '(<<EOF|<<-EOF|jsonencode|yamlencode)' "$file" 2>/dev/null || false); then
       echo -e "${YELLOW}⚠️  $file: Found single '{' - might be a typo${NC}"
       ((warnings++))
     fi
   fi
 
   # Check for undefined filter usage (common mistake)
-  if grep -qE '\{\{.*\|[[:space:]]*[a-z_]+[[:space:]]*\}\}' "$file"; then
+  if grep -qE '\{\{.*\|[[:space:]]*[a-z_]+[[:space:]]*\}\}' "$file" 2>/dev/null || false; then
     filters=$(grep -oE '\|[[:space:]]*([a-z_]+)' "$file" 2>/dev/null | sed 's/|[[:space:]]*//' | sort -u || true)
     for filter in $filters; do
       # List of known Liquid filters
