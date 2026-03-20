@@ -1,0 +1,51 @@
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ansible
+*.pyc
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.molecule/
+
+# Environment variables
+.env
+.env.local
+*.tfvars
+!*.tfvars.liquid
+
+# Local development
+local/
+tmp/
+temp/
+
+# Logs
+*.log
+logs/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Build artifacts
+dist/
+build/
+*.o
+*.a
