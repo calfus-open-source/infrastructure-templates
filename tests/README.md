@@ -291,7 +291,66 @@ When adding new tests:
 # Test locally
 make test
 
-# Pre-commit check (future)
+## Coverage-Driven Test Automation
+
+See: [.copilot-local/docs/COVERAGE-AUTOMATION.md](../.copilot-local/docs/COVERAGE-AUTOMATION.md)
+
+### Quick Reference
+
+```bash
+# Check current coverage
+make coverage
+
+# Generate gap report
+make coverage-report
+
+# Use Copilot to generate tests
+/generate-coverage-tests  # (VS Code slash command)
+
+# Validate and commit
+make test-unit
+git add tests/
+git commit
+```
+
+### Coverage Thresholds
+
+| Metric | Threshold |
+|--------|-----------|
+| Lines | 60% |
+| Statements | 60% |
+| Functions | 55% |
+| Branches | 50% |
+
+### Workflow
+
+1. **Develop**: Make code changes
+2. **Test**: Run `make test` to generate coverage report
+3. **Check**: Run `make coverage` to see current coverage
+4. **Gap Analysis**: Run `make coverage-report` if below thresholds
+5. **Generate**: Use `/generate-coverage-tests` in Copilot to generate tests
+6. **Validate**: Run `make test-unit` to validate new tests
+7. **Commit**: Stage and commit when coverage meets thresholds
+
+### Pre-Commit Gate
+
+Git pre-commit hook automatically runs coverage enforcement:
+
+- Blocks commits if coverage drops below thresholds
+- Suggests: `make generate-coverage-tests`
+
+### LLM-Assisted Test Generation
+
+Copilot slash command `/generate-coverage-tests`:
+
+- Analyzes gap report
+- Generates 3-5 test skeletons per iteration
+- Guides recursive test creation
+- Stops when thresholds met or plateau detected
+
+## Pre-commit check (future)
+
+```bash
 pre-commit run tests --all-files
 ```
 
