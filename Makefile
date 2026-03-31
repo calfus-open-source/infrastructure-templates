@@ -38,7 +38,9 @@ ACTIVATE := source $(VENV_BIN)/activate &&
 	setup clean update-deps \
 	lint-fix lint-summary \
 	test test-unit test-scripts test-terraform test-ansible test-verbose test-tap test-one \
-	check-deps status list-tests fixtures
+	check-deps status list-tests fixtures \
+	coverage coverage-gaps coverage-enforce coverage-report generate-coverage-tests \
+	coverage-ci coverage-baseline coverage-compare coverage-setup
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Help
@@ -63,6 +65,9 @@ help: ## Show this help
 		awk 'BEGIN {FS = ":.*?## "}; {printf "    $(CYAN)%-22s$(RESET) %s\n", $$1, $$2}'
 	@printf "\n$(BOLD)  Utility$(RESET)\n"
 	@grep -E '^(lint-fix|lint-summary):.*?## ' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "    $(CYAN)%-22s$(RESET) %s\n", $$1, $$2}'
+	@printf "\n$(BOLD)  Coverage$(RESET)$(DIM) (automated test generation)$(RESET)\n"
+	@grep -E '^(coverage|coverage-gaps|coverage-enforce|coverage-report|generate-coverage-tests|coverage-ci|coverage-baseline|coverage-compare|coverage-setup):.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "    $(CYAN)%-22s$(RESET) %s\n", $$1, $$2}'
 	@printf "\n"
 
@@ -94,6 +99,22 @@ test-verbose: ## Run all tests with verbose output
 
 test-tap: ## Run tests with TAP output
 	@$(MAKE) -C tests test-tap
+
+test-coverage: ## Run unit tests WITH coverage instrumentation (requires kcov/nyc/coverage.py)
+	@printf "\n$(SEP)\n$(BOLD)$(CYAN)  Unit Tests with Coverage$(RESET)\n$(SEP)\n"
+	@command -v kcov >/dev/null 2>&1 && { \
+		printf "$(PASS)  kcov found, generating coverage report\n"; \
+		mkdir -p coverage; \
+		export ROOT_DIR=$(ROOT_DIR) SCRIPTS=$(SCRIPTS) && $(MAKE) -C tests test-unit-coverage; \
+	} || { \
+		printf "$(FAIL)  kcov not found\n"; \
+		printf "\n$(CYAN)Install coverage tool:$(RESET)\n"; \
+		printf "  brew install kcov              # macOS\n"; \
+		printf "  apt-get install kcov          # Ubuntu/Debian\n"; \
+		printf "  yum install kcov              # RHEL/CentOS\n"; \
+		printf "\n$(CYAN)Then run:$(RESET) make test-coverage\n"; \
+		exit 1; \
+	}
 
 test-one: ## Run a single test file (usage: make test-one FILE=path/to/test.bats)
 	@$(MAKE) -C tests test-one FILE=$(FILE)
@@ -351,3 +372,96 @@ lint-summary: ## Dashboard — violation counts per linter
 	fi; \
 	\
 	printf "$(CYAN)══════════════════════════════════════════════════════$(RESET)\n\n"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Coverage Management & Test Generation
+# ═══════════════════════════════════════════════════════════════════════════
+
+.PHONY: coverage coverage-gaps coverage-enforce coverage-report generate-coverage-tests \
+	coverage-ci coverage-baseline coverage-compare coverage-setup
+
+coverage: ## Check test coverage (advisory, no block)
+	@printf "\n$(SEP)\n$(BOLD)$(CYAN)  Test Coverage Check$(RESET)\n$(SEP)\n"
+	@bash scripts/check-coverage.sh -r coverage/coverage-final.json || true
+
+coverage-gaps: ## Analyze and report coverage gaps
+	@printf "\n$(SEP)\n$(BOLD)$(CYAN)  Coverage Gap Analysis$(RESET)\n$(SEP)\n"
+	@bash scripts/check-coverage.sh -r coverage/coverage-final.json -g || true
+
+coverage-enforce: ## Check coverage (FAILS if below thresholds)
+	@printf "\n$(SEP)\n$(BOLD)$(CYAN)  Coverage Enforcement$(RESET)\n$(SEP)\n"
+	@bash scripts/check-coverage.sh -r coverage/coverage-final.json -f
+
+coverage-report: ## Generate gap report for LLM analysis
+	@printf "\n$(SEP)\n$(BOLD)$(CYAN)  Generating Coverage Gap Report$(RESET)\n$(SEP)\n"
+	@bash scripts/check-coverage.sh -r coverage/coverage-final.json -g -w .coverage-gaps.json
+	@printf "$(PASS)  Gap report: .coverage-gaps.json\n"
+	@printf "$(CYAN)Next:$(RESET) Use /generate-coverage-tests in Copilot\n"
+
+generate-coverage-tests: coverage-report ## Generate missing tests via LLM (interactive)
+	@printf "\n$(BOLD)$(CYAN)════════════════════════════════════════════════════════════$(RESET)\n"
+	@printf "$(BOLD)$(CYAN)  LLM-Assisted Coverage Test Generation$(RESET)\n"
+	@printf "$(BOLD)$(CYAN)════════════════════════════════════════════════════════════$(RESET)\n"
+	@echo
+	@echo "$(CYAN)Step 1: Gap report generated$(RESET)"
+	@echo "  File: .coverage-gaps.json"
+	@echo
+	@echo "$(CYAN)Step 2: Invoke Copilot slash command$(RESET)"
+	@echo "  In VS Code, type: $(BOLD)/generate-coverage-tests$(RESET)"
+	@echo
+	@echo "$(CYAN)Step 3: Follow Copilot's prompts to generate tests$(RESET)"
+	@echo "  • Analyzes low-coverage files"
+	@echo "  • Generates 3-5 test skeletons"
+	@echo "  • Validates tests pass"
+	@echo
+	@echo "$(CYAN)Step 4: Verify and commit$(RESET)"
+	@echo "  $$ make test-unit              # Validate new tests"
+	@echo "  $$ git add tests/"
+	@echo "  $$ git commit"
+	@echo
+	@echo "See: .copilot-local/docs/COVERAGE-AUTOMATION.md"
+
+coverage-ci: ## Coverage enforcement for CI/CD (strict)
+	@printf "\n$(SEP)\n$(BOLD)$(CYAN)  CI Coverage Check$(RESET)\n$(SEP)\n"
+	@bash scripts/check-coverage.sh -r coverage/coverage-final.json -f
+
+coverage-setup: ## Setup coverage tools and baseline
+	@printf "\n$(SEP)\n$(BOLD)$(CYAN)  Coverage Setup$(RESET)\n$(SEP)\n"
+	@mkdir -p coverage
+	@printf "$(PASS)  Created coverage directory\n"
+	@echo
+	@echo "$(CYAN)Coverage Tools - Installation Guide:$(RESET)"
+	@echo
+	@echo "  $(BOLD)Option 1: kcov (macOS - for shell scripts)$(RESET)"
+	@echo "    brew install kcov"
+	@echo "    Then run: make test-unit"
+	@echo
+	@echo "  $(BOLD)Option 2: nyc (Node.js/JavaScript)$(RESET)"
+	@echo "    npm install --save-dev nyc"
+	@echo "    Add to package.json scripts:"
+	@echo "      \"test\": \"nyc --reporter=json-summary bats tests/unit/**/*.bats\""
+	@echo "    Then run: npm test"
+	@echo
+	@echo "  $(BOLD)Option 3: coverage.py (Python)$(RESET)"
+	@echo "    pip install coverage"
+	@echo "    Create pytest.ini with [coverage:run] section"
+	@echo "    Then run: coverage run -m pytest && coverage json"
+	@echo
+	@echo "$(CYAN)Next Steps:$(RESET)"
+	@echo "  1. Install your preferred coverage tool from above"
+	@echo "  2. Run tests to generate coverage: make test-unit"
+	@echo "  3. Check coverage: make coverage"
+	@echo "  4. Create baseline: make coverage-baseline"
+	@echo
+	@echo "$(CYAN)Reference:$(RESET) .copilot-local/docs/COVERAGE-AUTOMATION.md"
+
+coverage-baseline: ## Create baseline coverage snapshot
+	@printf "\n$(SEP)\n$(BOLD)$(CYAN)  Creating Coverage Baseline$(RESET)\n$(SEP)\n"
+	@[[ -f coverage/coverage-final.json ]] && cp coverage/coverage-final.json .coverage-baseline.json && \
+		printf "$(PASS)  Baseline created: .coverage-baseline.json\n" || \
+		printf "$(FAIL)  No coverage report found\n"
+
+coverage-compare: ## Compare current vs. baseline coverage
+	@printf "\n$(SEP)\n$(BOLD)$(CYAN)  Coverage Comparison$(RESET)\n$(SEP)\n"
+	@bash -c 'source scripts/coverage-utils.sh && report_coverage_change .coverage-baseline.json coverage/coverage-final.json' || \
+		printf "$(WARN)  Baseline or current coverage unavailable\n"

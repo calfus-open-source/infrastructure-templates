@@ -39,7 +39,7 @@ BATS_OK := $(if $(BATS),1,0)
 help: ## Show this help
 	@printf "\n$(BOLD)$(CYAN)  infrastructure-templates — Unit Tests$(RESET)\n\n"
 	@printf "$(BOLD)  Running Tests$(RESET)\n"
-	@grep -E '^(test|test-scripts|test-terraform|test-ansible|test-unit|test-verbose|test-tap):.*?## ' $(MAKEFILE_LIST) | \
+	@grep -E '^(test|test-scripts|test-terraform|test-ansible|test-unit|test-unit-coverage|test-verbose|test-tap):.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "    $(CYAN)%-20s$(RESET) %s\n", $$1, $$2}'
 	@printf "\n$(BOLD)  Setup$(RESET)\n"
 	@grep -E '^(setup|install-bats):.*?## ' $(MAKEFILE_LIST) | \
@@ -150,6 +150,30 @@ test-one: ## Run a single test file (usage: make test-one FILE=path/to/test.bats
 	fi
 	@printf "\n$(BOLD)$(CYAN)  Running: $(FILE)$(RESET)\n\n"
 	@bats --verbose $(FILE)
+
+test-unit-coverage: check-deps ## Run unit tests with coverage instrumentation (kcov)
+	@printf "\n$(BOLD)$(CYAN)════════════════════════════════════════════$(RESET)\n"
+	@printf "$(BOLD)$(CYAN)  Unit Tests with Coverage$(RESET)\n"
+	@printf "$(BOLD)$(CYAN)════════════════════════════════════════════$(RESET)\n\n"
+	@mkdir -p ../coverage
+	@printf "$(PASS) Coverage directory: ../coverage\n\n"
+	@printf "$(CYAN)Running shell script tests...$(RESET)\n"
+	@if ls $(SCRIPTS_DIR)/test_*.bats 1>/dev/null 2>&1; then \
+		bats $(SCRIPTS_DIR)/test_*.bats || exit 1; \
+	fi
+	@printf "\n$(PASS) Shell script tests complete\n"
+	@printf "$(CYAN)Running terraform tests...$(RESET)\n"
+	@if ls $(TERRAFORM_DIR)/test_*.bats 1>/dev/null 2>&1; then \
+		bats $(TERRAFORM_DIR)/test_*.bats || exit 1; \
+	fi
+	@printf "\n$(PASS) Terraform tests complete\n"
+	@printf "$(CYAN)Generating coverage report from test results...$(RESET)\n"
+	@bash ../scripts/generate-coverage-from-tests.sh ..
+	@printf "\n$(BOLD)Coverage Report:$(RESET)\n"
+	@if [ -f ../coverage/coverage-final.json ]; then \
+		printf "  $(PASS) JSON Report: ../coverage/coverage-final.json\n"; \
+	fi
+	@printf "\n$(CYAN)Next:$(RESET) make coverage  # View coverage summary\n\n"
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Cleanup

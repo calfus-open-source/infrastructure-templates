@@ -18,6 +18,9 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
+# Terraform Build & Rendering
+rendered/
+
 # Ansible
 *.pyc
 __pycache__/
@@ -25,20 +28,41 @@ __pycache__/
 .pytest_cache/
 .molecule/
 
+# Ansible Galaxy
+.ansible/collections/
+.ansible/modules/
+
 # Environment variables
 .env
 .env.local
 *.tfvars
 !*.tfvars.liquid
 
+# Python
+.venv/
+
 # Local development
 local/
 tmp/
 temp/
 
-# Logs
+# Logs & Output
 *.log
 logs/
+stderr.txt
+stdout.txt
+
+# Test output & coverage
+coverage/
+.coverage-baseline.json
+.coverage-gaps.json
+.coverage-iterations.log
+.coverage-before.json
+.coverage-after.json
+
+# Tool caches
+.pre-commit-cache
+.tfsec/
 
 # OS files
 Thumbs.db
