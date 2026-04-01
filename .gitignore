@@ -73,3 +73,8 @@ dist/
 build/
 *.o
 *.a
+
+# Coverage Gate runtime artifacts (not committed; .coverage-gate-bypasses.log is intentionally tracked)
+coverage-gate-report.md
+coverage-gate-result.json
+coverage-reports/

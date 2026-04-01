@@ -398,28 +398,8 @@ coverage-report: ## Generate gap report for LLM analysis
 	@printf "$(PASS)  Gap report: .coverage-gaps.json\n"
 	@printf "$(CYAN)Next:$(RESET) Use /generate-coverage-tests in Copilot\n"
 
-generate-coverage-tests: coverage-report ## Generate missing tests via LLM (interactive)
-	@printf "\n$(BOLD)$(CYAN)════════════════════════════════════════════════════════════$(RESET)\n"
-	@printf "$(BOLD)$(CYAN)  LLM-Assisted Coverage Test Generation$(RESET)\n"
-	@printf "$(BOLD)$(CYAN)════════════════════════════════════════════════════════════$(RESET)\n"
-	@echo
-	@echo "$(CYAN)Step 1: Gap report generated$(RESET)"
-	@echo "  File: .coverage-gaps.json"
-	@echo
-	@echo "$(CYAN)Step 2: Invoke Copilot slash command$(RESET)"
-	@echo "  In VS Code, type: $(BOLD)/generate-coverage-tests$(RESET)"
-	@echo
-	@echo "$(CYAN)Step 3: Follow Copilot's prompts to generate tests$(RESET)"
-	@echo "  • Analyzes low-coverage files"
-	@echo "  • Generates 3-5 test skeletons"
-	@echo "  • Validates tests pass"
-	@echo
-	@echo "$(CYAN)Step 4: Verify and commit$(RESET)"
-	@echo "  $$ make test-unit              # Validate new tests"
-	@echo "  $$ git add tests/"
-	@echo "  $$ git commit"
-	@echo
-	@echo "See: .copilot-local/docs/COVERAGE-AUTOMATION.md"
+generate-coverage-tests: ## Generate missing tests via LLM (manual mode, 10 iterations, gh auth required)
+	@bash tools/coverage-gate run --mode=manual
 
 coverage-ci: ## Coverage enforcement for CI/CD (strict)
 	@printf "\n$(SEP)\n$(BOLD)$(CYAN)  CI Coverage Check$(RESET)\n$(SEP)\n"

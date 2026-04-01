@@ -1,0 +1,187 @@
+#!/usr/bin/env bash
+# tools/coverage-gate — shared entrypoint for coverage gate (dual-mode)
+#
+# Usage:
+#   tools/coverage-gate run --mode=local  [--staged-only]
+#   tools/coverage-gate run --mode=ci     [--no-llm] [--report-dir=DIR]
+#   tools/coverage-gate run --mode=manual
+#
+# Exit codes:
+#   0 — thresholds met
+#   1 — thresholds not met after max iterations
+#   2 — configuration/usage error
+#   3 — test suite failed (separate from coverage)
+#
+# Bypass (local/manual mode only):
+#   SKIP_COVERAGE_GATE=1 git commit   — skips gate, logs audit entry
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Bypass check — must come first, before any dependencies are loaded
+# ─────────────────────────────────────────────────────────────────────────────
+
+if [[ "${SKIP_COVERAGE_GATE:-}" == "1" ]]; then
+    BYPASS_LOG="${REPO_ROOT}/.coverage-gate-bypasses.log"
+    COMMIT_MSG="${GIT_COMMIT_MSG:-unknown}"
+    USER_NAME="${GIT_AUTHOR_NAME:-$(git config user.name 2>/dev/null || echo unknown)}"
+    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    # Get current coverage if available
+    COV_PCT="unknown"
+    if command -v jq &>/dev/null && [[ -f "${REPO_ROOT}/coverage/coverage-final.json" ]]; then
+        COV_PCT=$(jq -r '.total.statements.pct // "unknown"' "${REPO_ROOT}/coverage/coverage-final.json" 2>/dev/null || echo "unknown")
+    fi
+
+    echo "${TIMESTAMP}  user=${USER_NAME}  coverage=${COV_PCT}%  commit-msg=\"${COMMIT_MSG}\"" \
+        >> "${BYPASS_LOG}"
+
+    echo "[coverage-gate] ⚠  SKIP_COVERAGE_GATE=1 — bypass active"
+    echo "[coverage-gate]    Audit entry written to: ${BYPASS_LOG}"
+    exit 0
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Argument parsing
+# ─────────────────────────────────────────────────────────────────────────────
+
+_usage() {
+    cat << 'EOF'
+Usage: tools/coverage-gate run [OPTIONS]
+
+Options:
+  --mode=local|ci|manual   Execution mode (default: local)
+  --staged-only            Only run gate if testable staged files exist (local mode)
+  --no-llm                 Skip LLM generation; enforce-only (always set in CI)
+  --report-dir=DIR         Write reports to DIR (default: repo root)
+  -h, --help               Show this help
+
+Environment:
+  SKIP_COVERAGE_GATE=1     Bypass the gate (logs audit entry)
+
+Examples:
+  # Pre-commit hook
+  tools/coverage-gate run --mode=local --staged-only
+
+  # CI pipeline (no secrets needed)
+  tools/coverage-gate run --mode=ci --no-llm --report-dir=coverage-reports/
+
+  # Manual developer session
+  tools/coverage-gate run --mode=manual
+EOF
+    exit 2
+}
+
+SUBCOMMAND="${1:-}"
+if [[ "${SUBCOMMAND}" != "run" ]]; then
+    _usage
+fi
+shift
+
+# Defaults
+export GATE_MODE="local"
+export GATE_STAGED_ONLY="0"
+export GATE_NO_LLM="0"
+export REPORT_DIR="${REPO_ROOT}"
+
+for arg in "$@"; do
+    case "${arg}" in
+        --mode=*)       GATE_MODE="${arg#--mode=}" ;;
+        --staged-only)  GATE_STAGED_ONLY="1" ;;
+        --no-llm)       GATE_NO_LLM="1" ;;
+        --report-dir=*) REPORT_DIR="${arg#--report-dir=}" ;;
+        -h|--help)      _usage ;;
+        *)
+            echo "[coverage-gate] Unknown option: ${arg}" >&2
+            _usage
+            ;;
+    esac
+done
+
+# CI mode always implies --no-llm
+if [[ "${GATE_MODE}" == "ci" ]]; then
+    GATE_NO_LLM="1"
+fi
+
+# Validate mode
+case "${GATE_MODE}" in
+    local|ci|manual) ;;
+    *)
+        echo "[coverage-gate] Invalid mode: ${GATE_MODE}. Use: local, ci, or manual" >&2
+        exit 2
+        ;;
+esac
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Dependency check
+# ─────────────────────────────────────────────────────────────────────────────
+
+_check_dependencies() {
+    local missing=0
+
+    if ! command -v jq &>/dev/null; then
+        echo "[coverage-gate] jq is required: brew install jq" >&2
+        ((missing++))
+    fi
+
+    if ! command -v make &>/dev/null; then
+        echo "[coverage-gate] make is required" >&2
+        ((missing++))
+    fi
+
+    if ! command -v patch &>/dev/null; then
+        echo "[coverage-gate] patch is required: brew install patch" >&2
+        ((missing++))
+    fi
+
+    if [[ ${missing} -gt 0 ]]; then
+        exit 2
+    fi
+}
+
+_check_dependencies
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Run with wall-clock timeout (local / manual modes)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Load config for timeout value
+TIMEOUT_SECONDS=240
+if command -v yq &>/dev/null && [[ -f "${REPO_ROOT}/.coverage-gate.yaml" ]]; then
+    TIMEOUT_SECONDS=$(yq '.gate.timeout_seconds // 240' "${REPO_ROOT}/.coverage-gate.yaml" 2>/dev/null || echo 240)
+fi
+
+# Source and run the loop controller
+# shellcheck source=tools/lib/runner.sh
+source "${REPO_ROOT}/tools/lib/runner.sh"
+
+if [[ "${GATE_MODE}" == "ci" ]]; then
+    # CI: no timeout wrapper — bounded naturally by --no-llm single-pass
+    runner_run
+else
+    # Local/manual: enforce wall-clock timeout
+    if command -v timeout &>/dev/null; then
+        timeout "${TIMEOUT_SECONDS}s" bash -c "
+            export GATE_MODE='${GATE_MODE}'
+            export GATE_STAGED_ONLY='${GATE_STAGED_ONLY}'
+            export GATE_NO_LLM='${GATE_NO_LLM}'
+            export REPORT_DIR='${REPORT_DIR}'
+            export REPO_ROOT='${REPO_ROOT}'
+            source '${REPO_ROOT}/tools/lib/runner.sh'
+            runner_run
+        " || {
+            rc=$?
+            if [[ ${rc} -eq 124 ]]; then
+                echo ""
+                echo "[coverage-gate] ⚠  Timeout (${TIMEOUT_SECONDS}s) — coverage gate did not complete"
+                echo "  Run 'make generate-coverage-tests' for a manual session"
+                exit 1
+            fi
+            exit ${rc}
+        }
+    else
+        runner_run
+    fi
+fi

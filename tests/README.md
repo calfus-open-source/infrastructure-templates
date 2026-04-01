@@ -304,13 +304,14 @@ make coverage
 # Generate gap report
 make coverage-report
 
-# Use Copilot to generate tests
-/generate-coverage-tests  # (VS Code slash command)
+# Generate tests automatically (no VS Code required, needs gh auth login)
+make generate-coverage-tests
 
 # Validate and commit
 make test-unit
 git add tests/
 git commit
+# Note: coverage-gate pre-commit hook runs automatically on commit (3 iterations)
 ```
 
 ### Coverage Thresholds
@@ -328,27 +329,33 @@ git commit
 2. **Test**: Run `make test` to generate coverage report
 3. **Check**: Run `make coverage` to see current coverage
 4. **Gap Analysis**: Run `make coverage-report` if below thresholds
-5. **Generate**: Use `/generate-coverage-tests` in Copilot to generate tests
+5. **Generate**: Run `make generate-coverage-tests` (automated, uses Copilot via `gh auth token`)
 6. **Validate**: Run `make test-unit` to validate new tests
 7. **Commit**: Stage and commit when coverage meets thresholds
 
 ### Pre-Commit Gate
 
-Git pre-commit hook automatically runs coverage enforcement:
+`tools/coverage-gate` runs automatically on `git commit` via the pre-commit hook:
 
-- Blocks commits if coverage drops below thresholds
-- Suggests: `make generate-coverage-tests`
+- Checks coverage thresholds (local mode, 3 iterations max, ~4 min worst-case)
+- On failure: generates tests via Copilot API (`gh auth token`), applies patch, re-verifies
+- Blocks commit if thresholds still not met — shows gap report and remediation steps
+- Bypass (logged): `SKIP_COVERAGE_GATE=1 git commit`
 
 ### LLM-Assisted Test Generation
 
-Copilot slash command `/generate-coverage-tests`:
+`tools/coverage-gate run --mode=manual` (via `make generate-coverage-tests`):
 
-- Analyzes gap report
-- Generates 3-5 test skeletons per iteration
-- Guides recursive test creation
+- Analyzes `.coverage-gaps.json`
+- Calls GitHub Copilot API non-interactively (no VS Code required)
+- Generates unified diffs for test files, applies, verifies, repeats (up to 10 iterations)
 - Stops when thresholds met or plateau detected
+- Requires: `gh auth login` (uses existing GitHub session — no new secrets)
 
-## Pre-commit check (future)
+**Interactive fallback** (VS Code): `/generate-coverage-tests` slash command — use when the
+automated runner plateaus and you want to guide generation with additional context.
+
+## Pre-commit check
 
 ```bash
 pre-commit run tests --all-files

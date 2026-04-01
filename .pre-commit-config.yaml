@@ -113,3 +113,12 @@ repos:
         language: script
         files: \.tf\.liquid$
         pass_filenames: false
+
+      - id: coverage-gate
+        name: Coverage Gate
+        entry: tools/coverage-gate
+        args: ['run', '--mode=local', '--staged-only']
+        language: script
+        pass_filenames: false
+        stages: [pre-commit]
+        always_run: false
