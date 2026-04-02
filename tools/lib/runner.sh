@@ -154,12 +154,19 @@ runner_run() {
     if [[ "${mode}" == "ci" || "${no_llm}" == "1" ]]; then
         _info "Enforce-only mode (no LLM generation)"
 
-        # Regenerate coverage report
-        if ! make -C "${REPO_ROOT}" test-coverage --no-print-directory -s 2>/tmp/runner-ci-err; then
-            _fail "Test suite failed"
-            cat /tmp/runner-ci-err >&2 || true
-            _write_report "ERROR" 0 "test suite failed"
-            exit 3
+        # In CI the 'Run unit tests' step already called 'make test' which produces
+        # coverage/coverage-final.json via generate-coverage-from-tests.sh.
+        # Reuse that report when it exists; only re-run if it is missing.
+        if [[ ! -f "${COVERAGE_REPORT}" ]]; then
+            _info "Coverage report not found — running make test-coverage"
+            if ! make -C "${REPO_ROOT}" test-coverage --no-print-directory -s 2>/tmp/runner-ci-err; then
+                _fail "Test suite failed"
+                cat /tmp/runner-ci-err >&2 || true
+                _write_report "ERROR" 0 "test suite failed"
+                exit 3
+            fi
+        else
+            _info "Reusing coverage report from prior test step: ${COVERAGE_REPORT}"
         fi
 
         # Write gap report for artifact upload
@@ -190,12 +197,14 @@ runner_run() {
     # shellcheck source=tools/lib/patch-applier.sh
     source "${_LIB_PATCHER}"
 
-    # Initial measurement
-    if ! make -C "${REPO_ROOT}" test-coverage --no-print-directory -s 2>/tmp/runner-cov-err; then
-        _fail "Test suite failed before gate could run"
-        cat /tmp/runner-cov-err >&2 || true
-        _write_report "ERROR" 0 "test suite failed"
-        exit 3
+    # Initial measurement — reuse existing report if present, otherwise generate one
+    if [[ ! -f "${COVERAGE_REPORT}" ]]; then
+        if ! make -C "${REPO_ROOT}" test-coverage --no-print-directory -s 2>/tmp/runner-cov-err; then
+            _fail "Test suite failed before gate could run"
+            cat /tmp/runner-cov-err >&2 || true
+            _write_report "ERROR" 0 "test suite failed"
+            exit 3
+        fi
     fi
 
     if coverage_thresholds_met; then
