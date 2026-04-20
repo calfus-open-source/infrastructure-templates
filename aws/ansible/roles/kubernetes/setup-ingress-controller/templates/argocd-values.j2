@@ -4,15 +4,15 @@ server:
   ingress:
     # -- Enable an ingress resource for the Argo CD server
     enabled: true
-    controller: generic    
+    controller: generic
     annotations:
       nginx.ingress.kubernetes.io/rewrite-target: /
     ingressClassName: "nginx"
- 
+
     # -- Argo CD server hostname
     ## NOTE: Hostname must be provided if Ingress is enabled
     hostname: "argocd.{{ hostname }}"
- 
+
 configs:
   params:
     server.insecure: true

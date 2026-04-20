@@ -14,7 +14,9 @@ resource "aws_ecr_repository" "ecr_repo" {
   name                 = "${var.name}-${var.appType}-app"
   image_tag_mutability = var.image_tag_mutability
   tags = {
+    "Name"           = "${var.name}-${var.appType}-app"
     "product"        = var.name
+    "environment"    = var.environment
     "role"           = "cicd"
     "terraform"      = "true"
   }

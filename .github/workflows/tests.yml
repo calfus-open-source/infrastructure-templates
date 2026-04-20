@@ -1,0 +1,65 @@
+name: Unit Tests
+run-name: "[🧪 Unit Tests | UT-${{ github.run_number }}] ${{ github.event.pull_request.title || github.event.head_commit.message }}"
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+      - 'refactor/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats shellcheck jq
+
+      - name: Run unit tests
+        run: |
+          cd tests
+          make test
+
+      - name: Run coverage gate (enforce only)
+        run: |
+          tools/coverage-gate run --mode=ci --no-llm --report-dir=coverage-reports/
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage-reports/
+            .coverage-gaps.json
+            .coverage-gate-report.md
+
+      - name: Generate test report
+        if: always()
+        run: |
+          echo "## Unit Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All unit tests completed." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ -f coverage-reports/coverage-gate-result.json ]]; then
+            STATUS=$(jq -r '.status // "unknown"' coverage-reports/coverage-gate-result.json)
+            ITERS=$(jq -r '.iterations // 0' coverage-reports/coverage-gate-result.json)
+            echo "### Coverage Gate: ${STATUS} (${ITERS} iteration(s))" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "Run tests locally:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "make test" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

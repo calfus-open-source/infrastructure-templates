@@ -1,0 +1,15 @@
+# Valid Liquid template - should pass validation
+{% if enable_nat_gateway %}
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
+}
+{% endif %}
+
+{% for index in range(3) %}
+resource "aws_subnet" "private" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.{{ index }}.0/24"
+  availability_zone = "us-east-1{{ abcs[index] }}"
+}
+{% endfor %}

@@ -1,0 +1,61 @@
+---
+# Ansible-lint configuration for infrastructure-templates
+# https://ansible-lint.readthedocs.io/
+
+profile: production
+
+# Exclude paths
+exclude_paths:
+  - aws/ansible/roles/kubernetes/nginx.bkp/
+  - aws/ansible/playbooks/  # Skip for namespace-organized roles
+  - .git/
+  - .github/
+  - node_modules/
+  - .DS_Store
+
+# Skip specific rules
+skip_list:
+  - yaml[line-length]  # Handled by yamllint
+  - name[casing]      # Allow flexible task naming
+  - fqcn[action-core] # Allow short module names for readability
+
+# Warning list (don't fail, just warn)
+warn_list:
+  - experimental
+  - role-name
+  - no-changed-when  # Some shell commands are intentional
+
+# Enable specific rules
+enable_list:
+  - no-log-password
+  - yaml
+
+# Mock modules for validation
+mock_modules:
+  - community.general.firewalld
+  - community.general.parted
+  - community.general.filesystem
+
+# Mock roles for validation (if needed)
+mock_roles: []
+
+# Offline mode (don't download roles)
+offline: false
+
+# Use default Ansible configuration
+use_default_rules: true
+
+# Exit with error on violations
+strict: false
+
+# Additional configuration
+kinds:
+  - playbook: "aws/ansible/playbooks/*.{yml,yaml}"
+  - tasks: "aws/ansible/roles/*/tasks/*.{yml,yaml}"
+  - handlers: "aws/ansible/roles/*/handlers/*.{yml,yaml}"
+  - vars: "aws/ansible/roles/*/vars/*.{yml,yaml}"
+  - defaults: "aws/ansible/roles/*/defaults/*.{yml,yaml}"
+  - meta: "aws/ansible/roles/*/meta/*.{yml,yaml}"
+
+# Verbosity
+verbosity: 1

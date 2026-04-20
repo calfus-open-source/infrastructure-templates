@@ -1,0 +1,8 @@
+# Invalid Liquid template - nested tags with mismatch
+{% if create_subnets %}
+  {% for az in availability_zones %}
+    resource "aws_subnet" "main" {
+      vpc_id = aws_vpc.main.id
+    }
+  {% endfor %}
+  # Missing endif after endfor - intentional error for testing

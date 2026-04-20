@@ -6,6 +6,13 @@ resource "tls_private_key" "gitops_ssh_key" {
 resource "aws_iam_policy" "gitops_user_policy" {
   name        = "${var.name}-${var.environment}-gitops-policy"
   description = "Grant access to codecommit to gitops user"
+  tags = {
+    "Name"           = "${var.name}-${var.environment}-gitops-policy"
+    "product"        = var.name
+    "environment"    = var.environment
+    "role"           = "cicd"
+    "terraform"      = "true"
+  }
 
   # Specify the policy document using JSON syntax
   policy = <<EOF
@@ -40,7 +47,7 @@ resource "aws_iam_policy" "gitops_user_policy" {
           "codecommit:DeleteRepository"
         ]
       }
-    ]  
+    ]
 }
 EOF
 }
@@ -51,8 +58,8 @@ resource "aws_iam_user" "gitops_user" {
     "product"        = var.name
     "environment"    = var.environment
     "role"           = "cicd"
-    "terraform"      = "true"    
-  }  
+    "terraform"      = "true"
+  }
 }
 
 resource "aws_iam_user_policy_attachment" "gitops_user_policy" {
@@ -70,6 +77,7 @@ resource "aws_codecommit_repository" "gitops_codecommit" {
   repository_name = "${var.repository_name}"
   description     = "CodeCommit repository for ${var.repository_name}"
   tags = {
+    "Name"           = var.repository_name
     "product"        = var.name
     "environment"    = var.environment
     "role"           = "cicd"

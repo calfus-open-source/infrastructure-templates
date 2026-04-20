@@ -3,7 +3,8 @@
   become: yes
   become_user: kube
   shell: |
-    export MASTER_NODE=$(kubectl get nodes |grep control-plane|cut -d ' ' -f1)
+    set -o pipefail
+    export MASTER_NODE=$(kubectl get nodes | grep control-plane | cut -d ' ' -f1)
     kubectl taint nodes $MASTER_NODE node-role.kubernetes.io/master-
     kubectl taint nodes $MASTER_NODE node-role.kubernetes.io/control-plane-
     kubectl taint nodes $MASTER_NODE node-role.kubernetes.io/control-plane:NoSchedule-
@@ -11,16 +12,19 @@
     kubectl create clusterrolebinding dashboard-admin-sa --clusterrole=cluster-admin --serviceaccount=default:dashboard-admin-sa
   args:
     chdir: $HOME
+    executable: /bin/bash
+  changed_when: true
 
 - name: Install helm
   shell: |
+    set -o pipefail
     curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
     exit 0
   args:
-    executable: /bin/bash      
-  register: SHELL_STDOUT
+    executable: /bin/bash
+  register: kubernetes_helm_install
+  changed_when: "'helm' in kubernetes_helm_install.stdout"
 
 - name: debug output
-  ansible.builtin.debug: 
-    msg: "Helm Install: {{SHELL_STDOUT.stdout}}"
-
+  ansible.builtin.debug:
+    msg: "Helm Install: {{ kubernetes_helm_install.stdout }}"

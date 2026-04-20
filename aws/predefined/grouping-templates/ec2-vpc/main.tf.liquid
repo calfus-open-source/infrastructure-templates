@@ -65,4 +65,3 @@ resource "null_resource" "ssh_config" {
     command = "echo '${local.rendered_template}' >> ~/.ssh/config"
   }
 }
-

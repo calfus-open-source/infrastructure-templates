@@ -81,7 +81,7 @@ resource "aws_lb_target_group" "alb_tg" {
     healthy_threshold   = 5
     unhealthy_threshold = 3
     matcher             = "200,404"  # Specify the success HTTP response codes
-  }  
+  }
 }
 
 resource "aws_lb_listener" "alb_listnener_https" {

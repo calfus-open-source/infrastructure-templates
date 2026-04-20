@@ -17,7 +17,7 @@ module "vnet" {
   k8s_asg_id                  = module.nsg.k8s_asg_id
   k8s_vm_nsg_id               = module.nsg.k8s_vm_nsg_id
   k8s_private_subnet_offset   = var.k8s_private_subnet_offset
-  public_subnet_offset        = var.public_subnet_offset 
+  public_subnet_offset        = var.public_subnet_offset
  }
 
 module "nsg" {
@@ -73,7 +73,7 @@ module "agw" {
   public_ip_allocation_method       = var.public_ip_allocation_method
   app_gateway_subnet_id             = module.vnet.app_gateway_subnet_id
   azurerm_key_vault_id              = module.kv.key_vault_id
-  appgateway_kv_identity_id         = module.kv.kv_access_identity 
+  appgateway_kv_identity_id         = module.kv.kv_access_identity
   azurerm_key_vault_certificate_secret_id = module.kv.certificate_secret_id
  }
 
@@ -134,7 +134,7 @@ module "sql_server" {
     module.vnet.public_subnet_id
   ]
  }
- 
+
 # module "vpn_gateway" {
 #   count                        = var.enable_vpn_gateway ? 1 : 0
 #   source                       = "./modules/vpn_gateway"
@@ -183,6 +183,6 @@ module "repository" {
      name         = var.project_name
      appType      = var.appType
      environment  = var.environment
-     github_token = var.github_access_token 
+     github_token = var.github_access_token
      github_owner = var.github_owner
 }

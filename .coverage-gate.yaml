@@ -1,0 +1,65 @@
+---
+# Coverage Gate Configuration
+# Controls dual-mode coverage enforcement:
+#   local  — pre-commit hook, LLM-assisted (3 iterations, Copilot via gh auth token)
+#   ci     — enforce-only, no LLM, no credentials required
+#   manual — interactive developer session (10 iterations)
+
+coverage:
+  thresholds:
+    lines: 60
+    statements: 60
+    functions: 55
+    branches: 50
+  report: coverage/coverage-final.json
+  gaps_file: .coverage-gaps.json
+
+gate:
+  # Pre-commit / local mode: fast gate (not a full repair loop)
+  # Each iteration ≈ 45-90s (LLM call + make test-coverage); 3 iterations ≤ 4 min
+  max_iterations: 3
+  # Manual mode (make generate-coverage-tests): developer is present and can wait
+  max_iterations_manual: 10
+  # Wall-clock timeout in seconds for the entire gate run (local/manual modes)
+  timeout_seconds: 240
+  # Minimum coverage improvement (%) per iteration before plateau is declared
+  min_improvement_pct: 2.0
+  # How many consecutive plateau iterations before stopping
+  max_plateaus: 2
+
+test:
+  command: "make test-unit"
+  coverage_command: "make test-coverage"
+  test_dirs:
+    - tests/unit/scripts
+    - tests/unit/terraform
+    - tests/unit/ansible
+
+paths:
+  # LLM-generated patches may ONLY write files under these directories
+  allowed_write:
+    - tests/unit/
+  # These paths must never appear in any LLM-generated diff
+  denylist:
+    - .github/
+    - scripts/
+    - aws/
+    - azure/
+    - "*.tf"
+    - "*.liquid"
+    - Makefile
+    - .pre-commit-config.yaml
+    - .coverage-gate.yaml
+
+llm:
+  # GitHub Copilot Business API (org-approved provider)
+  # Auth: resolved at runtime via `gh auth token` — zero config, never stored in repo
+  provider: copilot
+  model: gpt-4o
+  max_tokens: 4096
+  instructions_file: .copilot-local/.coverage-agent.md
+
+bypass:
+  # Set this env var to skip the gate (logs an audit entry)
+  env_var: SKIP_COVERAGE_GATE
+  audit_log: .coverage-gate-bypasses.log

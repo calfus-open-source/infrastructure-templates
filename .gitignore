@@ -1,0 +1,80 @@
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform Build & Rendering
+rendered/
+
+# Ansible
+*.pyc
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.molecule/
+
+# Ansible Galaxy
+.ansible/collections/
+.ansible/modules/
+
+# Environment variables
+.env
+.env.local
+*.tfvars
+!*.tfvars.liquid
+
+# Python
+.venv/
+
+# Local development
+local/
+tmp/
+temp/
+
+# Logs & Output
+*.log
+logs/
+stderr.txt
+stdout.txt
+
+# Test output & coverage
+coverage/
+.coverage-baseline.json
+.coverage-gaps.json
+.coverage-iterations.log
+.coverage-before.json
+.coverage-after.json
+
+# Tool caches
+.pre-commit-cache
+.tfsec/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Build artifacts
+dist/
+build/
+*.o
+*.a
+
+# Coverage Gate runtime artifacts (not committed; .coverage-gate-bypasses.log is intentionally tracked)
+coverage-gate-report.md
+coverage-gate-result.json
+coverage-reports/

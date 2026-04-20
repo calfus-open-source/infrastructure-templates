@@ -65,7 +65,7 @@ module "eks" {
           }
         }
     },
-    { 
+    {
       for i in range(1) :
         "kube-system-${element(split("-", local.azs[i]), 2)}" => {
           selectors = [
@@ -82,7 +82,7 @@ module "eks" {
     "product"        = var.name
     "environment"    = var.environment
     "role"           = "eks"
-    "terraform"      = "true"    
+    "terraform"      = "true"
   }
 }
 
@@ -93,7 +93,7 @@ resource "aws_eks_access_entry" "devops_group" {
   type              = "STANDARD"
 }
 
-resource "aws_eks_access_policy_association" "AmazonEKSClusterAdminPolicy" {
+resource "aws_eks_access_policy_association" "amazon_eks_cluster_admin_policy" {
   for_each = { for user in data.aws_iam_group.devops.users : user.arn => user }
 
   cluster_name  = module.eks.cluster_name
@@ -105,7 +105,7 @@ resource "aws_eks_access_policy_association" "AmazonEKSClusterAdminPolicy" {
   }
 }
 
-resource "aws_eks_access_policy_association" "AmazonEKSAdminPolicy" {
+resource "aws_eks_access_policy_association" "amazon_eks_admin_policy" {
   for_each = { for user in data.aws_iam_group.devops.users : user.arn => user }
 
   cluster_name  = module.eks.cluster_name
@@ -117,7 +117,7 @@ resource "aws_eks_access_policy_association" "AmazonEKSAdminPolicy" {
   }
 }
 
-resource "aws_iam_role" "eks-fargate-role" {
+resource "aws_iam_role" "eks_fargate_role" {
   name = "eks-fargate-profile-${ var.name }-${ var.environment }-role"
 
   assume_role_policy = jsonencode({
@@ -132,14 +132,14 @@ resource "aws_iam_role" "eks-fargate-role" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "AmazonEKSFargatePodExecutionRolePolicy" {
+resource "aws_iam_role_policy_attachment" "amazon_eks_fargate_pod_execution_role_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy"
-  role       = aws_iam_role.eks-fargate-role.name
+  role       = aws_iam_role.eks_fargate_role.name
 }
 
-resource "aws_iam_role_policy_attachment" "AmazonEKS_CNI_Policy" {
+resource "aws_iam_role_policy_attachment" "amazon_eks_cni_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-  role       = aws_iam_role.eks-fargate-role.name
+  role       = aws_iam_role.eks_fargate_role.name
 }
 
 
@@ -151,7 +151,7 @@ resource "aws_secretsmanager_secret" "k8s_secret" {
   tags = {
     "product"        = var.name
     "environment"    = var.environment
-    "terraform"      = "true"  
+    "terraform"      = "true"
   }
 }
 

@@ -29,7 +29,7 @@ provider "kubernetes" {
     }
   }
   {% comment %} else condition {% endcomment %}
-  {% else %}  
+  {% else %}
   provider "helm" {
     kubernetes {
     host                   = var.cluster_endpoint
@@ -55,7 +55,7 @@ resource "null_resource" "argocd_values" {
   }
 }
 
-resource "kubernetes_namespace" "ns-argocd" {
+resource "kubernetes_namespace" "ns_argocd" {
   metadata {
     annotations = {
       name = "${var.name}-${var.environment}-argocd"
@@ -70,7 +70,7 @@ resource "helm_release" "argocd" {
   chart      = "argo-cd"
   repository = "https://argoproj.github.io/argo-helm"
   version    = "{{ argocd_helm_version }}"
-  namespace  = "${kubernetes_namespace.ns-argocd.metadata[0].name}"
+  namespace  = "${kubernetes_namespace.ns_argocd.metadata[0].name}"
   values = [
     local.argocd_values_content
   ]
@@ -84,8 +84,8 @@ resource "helm_release" "argocd" {
 
 resource "kubernetes_secret" "argocd_ssh_secret" {
   metadata {
-    name      = "${kubernetes_namespace.ns-argocd.metadata[0].name}-ssh-secret"
-    namespace = "${kubernetes_namespace.ns-argocd.metadata[0].name}"
+    name      = "${kubernetes_namespace.ns_argocd.metadata[0].name}-ssh-secret"
+    namespace = "${kubernetes_namespace.ns_argocd.metadata[0].name}"
     labels = {
       "argocd.argoproj.io/secret-type" = "repository"
     }

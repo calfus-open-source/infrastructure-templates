@@ -20,7 +20,7 @@ resource "null_resource" "argocd_app" {
   }
 }
 
-resource "kubernetes_namespace" "ns-environment" {
+resource "kubernetes_namespace" "ns_environment" {
   metadata {
     annotations = {
       name = "${var.name}-${var.environment}-app"
@@ -41,18 +41,32 @@ data "aws_lb" "frontend_alb" {
   }
 }
 
-resource "aws_route53_record" "argocd-cname" {
+resource "aws_route53_record" "argocd_cname" {
   zone_id = var.route53_zoneid
   name    = "argocd.${var.domain_name}"
   type    = "CNAME"
   ttl     = 300
   records        = [data.aws_lb.frontend_alb.dns_name]
+  tags = {
+    "Name"           = "argocd.${var.domain_name}"
+    "product"        = var.name
+    "environment"    = var.environment
+    "role"           = "networking"
+    "terraform"      = "true"
+  }
 }
 
-resource "aws_route53_record" "app-alias" {
+resource "aws_route53_record" "app_alias" {
   zone_id = var.route53_zoneid
   name    = "${var.domain_name}"
   type    = "A"
+  tags = {
+    "Name"           = var.domain_name
+    "product"        = var.name
+    "environment"    = var.environment
+    "role"           = "networking"
+    "terraform"      = "true"
+  }
 
   alias {
     name                   = data.aws_lb.frontend_alb.dns_name

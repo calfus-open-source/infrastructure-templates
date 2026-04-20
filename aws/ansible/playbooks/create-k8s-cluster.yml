@@ -1,54 +1,63 @@
 ---
-- hosts: bastion 
+- name: Setup VM on bastion
+  hosts: bastion
   gather_facts: yes
   become: yes
   roles:
-    - { role:  ../roles/kubernetes/setup-vm, tags: 'setup-vm' }
+    - { role: kubernetes/setup-vm, tags: 'setup-vm' }
 
-- hosts: k8s_master, k8s_worker 
+- name: Setup VM on cluster nodes
+  hosts: k8s_master, k8s_worker
   gather_facts: yes
   become: yes
   roles:
-    - { role:  ../roles/kubernetes/setup-vm, tags: 'setup-vm' }    
+    - { role: kubernetes/setup-vm, tags: 'setup-vm' }
 
-- hosts: k8s_master, k8s_worker 
+- name: Setup volumes on cluster nodes
+  hosts: k8s_master, k8s_worker
   gather_facts: yes
   become: yes
   roles:
-    - { role:  ../roles/kubernetes/setup-volumes, tags: 'setup-volumes' }    
+    - { role: kubernetes/setup-volumes, tags: 'setup-volumes' }
 
-- hosts: k8s_master, k8s_worker
+- name: Setup firewall on cluster nodes
+  hosts: k8s_master, k8s_worker
   gather_facts: yes
   become: yes
   roles:
-    - { role:  ../roles/kubernetes/setup-firewall, tags: 'setup-firewall' }
+    - { role: kubernetes/setup-firewall, tags: 'setup-firewall' }
 
-- hosts: k8s_master, k8s_worker
+- name: Setup containerd on cluster nodes
+  hosts: k8s_master, k8s_worker
   gather_facts: yes
   become: yes
   roles:
-    - { role:  ../roles/kubernetes/setup-containerd, tags: 'setup-containerd' }
+    - { role: kubernetes/setup-containerd, tags: 'setup-containerd' }
 
-- hosts: k8s_master, k8s_worker
+- name: Install Kubernetes on cluster nodes
+  hosts: k8s_master, k8s_worker
   gather_facts: yes
   become: yes
   roles:
-    - { role:  ../roles/kubernetes/install-kubernetes, tags: 'install-kubernetes' }
+    - { role: kubernetes/install-kubernetes, tags: 'install-kubernetes' }
 
-- hosts: k8s_master, k8s_worker
+- name: Setup Kubernetes node on cluster nodes
+  hosts: k8s_master, k8s_worker
   gather_facts: yes
   become: yes
   roles:
-    - { role:  ../roles/kubernetes/setup-kubernetes-node, tags: 'setup-kubernetes-node' }
+    - { role: kubernetes/setup-kubernetes-node, tags: 'setup-kubernetes-node' }
 
-- hosts: k8s_master
+- name: Setup master node
+  hosts: k8s_master
   gather_facts: yes
   become: yes
   roles:
-    - { role:  ../roles/kubernetes/setup-master-node, tags: 'setup-master-node' }
+    - { role: kubernetes/setup-master-node, tags: 'setup-master-node' }
 
-- hosts: k8s_worker
+- name: Setup worker node
+  hosts: k8s_worker
   gather_facts: yes
   become: yes
   roles:
-    - { role:  ../roles/kubernetes/setup-worker-node, tags: 'setup-worker-node' }
+    - { role: kubernetes/setup-worker-node, tags: 'setup-worker-node' }

@@ -1,24 +1,42 @@
 ---
 - name: install and configure dependencies
   shell: |
-      curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{kube_version}}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg --yes
+      set -o pipefail
+      curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ kube_version }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg --yes
+  args:
+    executable: /bin/bash
+  changed_when: false
 
 - name: Create kubernetes repo file
   file:
     path: "/etc/apt/sources.list.d/kubernetes.list"
     state: "touch"
+    mode: "0644"
 
 - name: Add K8s Source
   blockinfile:
     path: "/etc/apt/sources.list.d/kubernetes.list"
     block: |
-          deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{kube_version}}/deb/ /
+          deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ kube_version }}/deb/ /
 
 - name: install kubernetes
-  shell: |
-          apt-get update
-          apt-get install -y kubelet kubeadm kubectl kubernetes-cni
-          apt-mark hold kubelet kubeadm kubectl
+  ansible.builtin.apt:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+      - kubernetes-cni
+    state: present
+    update_cache: yes
+
+- name: Hold kubernetes packages
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - kubelet
+    - kubeadm
+    - kubectl
 
 - name: Add limits environment variable in kubelet.conf
   blockinfile:
@@ -33,9 +51,10 @@
     line: 'ExecStart=/usr/bin/kubelet $KUBELET_KUBECONFIG_ARGS $KUBELET_CONFIG_ARGS $KUBELET_KUBEADM_ARGS $KUBELET_EXTRA_ARGS $KUBELET_LIMITS'
 
 - name: Perform daemon-reload
-  command: systemctl daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: yes
 
 - name: Restart kubelet service
   service:
     name: kubelet
-    state: restarted          
+    state: restarted

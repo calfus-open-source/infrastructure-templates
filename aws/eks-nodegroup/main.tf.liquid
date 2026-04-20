@@ -19,7 +19,7 @@ module "vpc" {
     cidr = "${ var.vpc_cidr }"
 }
 module "rds"{
-    source = "./modules/rds"  
+    source = "./modules/rds"
     name = "${ var.project_name }"
     environment = "${ var.environment }"
     region                 = var.region
@@ -100,7 +100,7 @@ locals {
 data "aws_eks_cluster_auth" "eks_cluster_auth" {
     name = module.eks.cluster_name
 }
-  
+
 module "ingress-controller" {
     source                   = "./modules/ingress-controller"
     name                     = "${ var.project_name }"
@@ -130,7 +130,7 @@ module "environment" {
   domain_name                        = var.domain_name
   route53_zoneid                     = data.aws_route53_zone.route53_zone.zone_id
   gitops_repo_url_ssh                = module.gitops.gitops_ssh_clone_url
-  gitops_user_private_key            = module.gitops.gitops_ssh_private_key 
+  gitops_user_private_key            = module.gitops.gitops_ssh_private_key
   argocd_namespace                   = module.argo.argocd_namespace
 }
 
@@ -150,7 +150,7 @@ module "argo" {
     ssl_cert_arn                       = module.acm.ssl_cert_arn
     vpc_public_subnets                 = module.vpc.public_subnets
     gitops_repo_url_ssh                = module.gitops.gitops_ssh_clone_url
-    gitops_user_private_key            = module.gitops.gitops_ssh_private_key 
+    gitops_user_private_key            = module.gitops.gitops_ssh_private_key
 }
 locals {
    repositories = [

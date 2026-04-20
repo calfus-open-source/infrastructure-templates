@@ -24,7 +24,7 @@ resource "null_resource" "argocd_values" {
   }
 }
 
-resource "kubernetes_namespace" "ns-argocd" {
+resource "kubernetes_namespace" "ns_argocd" {
   metadata {
     annotations = {
       name = "${var.name}-${var.environment}-argocd"
@@ -38,7 +38,7 @@ resource "helm_release" "argocd" {
   chart      = "argo-cd"
   repository = "https://argoproj.github.io/argo-helm"
   version    = "{{ argocd_helm_version }}"
-  namespace  = kubernetes_namespace.ns-argocd.metadata[0].name
+  namespace  = kubernetes_namespace.ns_argocd.metadata[0].name
   values     = [local.argocd_values_content]
 
   lifecycle {

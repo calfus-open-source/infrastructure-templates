@@ -1,0 +1,124 @@
+---
+# Pre-commit hooks configuration for infrastructure-templates
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+# Update hooks: pre-commit autoupdate
+
+repos:
+  # Terraform formatting and validation
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.105.0
+    hooks:
+      - id: terraform_fmt
+        name: Terraform Format Check
+        args:
+          - --args=-check
+          - --args=-diff
+          - --args=-recursive
+
+      - id: terraform_validate
+        name: Terraform Validate
+        args:
+          - --hook-config=--retry-once-with-cleanup=true
+          - --tf-init-args=-backend=false
+
+      - id: terraform_tflint
+        name: TFLint
+        args:
+          - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+
+  # Ansible linting (uses local venv to avoid version mismatch with pre-commit)
+  - repo: local
+    hooks:
+      - id: ansible-lint
+        name: Ansible Lint
+        entry: .venv/bin/ansible-lint --config-file=.ansible-lint
+        language: system
+        files: \.(yaml|yml)$
+        exclude: >-
+          (?x)^(
+            azure/.*|
+            common-modules/.*|
+            scripts/.*|
+            .github/.*|
+            .yamllint\.yml|
+            .pre-commit-config\.yaml|
+            .markdownlint\.json
+          )$
+        pass_filenames: false
+
+  # YAML linting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        name: YAML Lint
+        args:
+          - --config-file=.yamllint.yml
+        exclude: \.liquid$
+
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim Trailing Whitespace
+      - id: end-of-file-fixer
+        name: Fix End of Files
+      - id: check-yaml
+        name: Check YAML Syntax
+        exclude: \.liquid$
+      - id: check-json
+        name: Check JSON Syntax
+        exclude: \.liquid$
+      - id: check-added-large-files
+        name: Check for Large Files
+        args: ['--maxkb=1024']
+      - id: detect-private-key
+        name: Detect Private Keys
+      - id: check-merge-conflict
+        name: Check for Merge Conflicts
+      - id: mixed-line-ending
+        name: Check Line Endings
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        name: ShellCheck
+        args: ['--severity=warning']
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.44.0
+    hooks:
+      - id: markdownlint
+        name: Markdown Lint
+        args: ['--config', '.markdownlint.json', '--fix']
+
+  # Custom validation scripts
+  - repo: local
+    hooks:
+      - id: validate-liquid-templates
+        name: Validate Liquid Templates
+        entry: scripts/validate-liquid-templates.sh
+        language: script
+        files: \.liquid$
+        pass_filenames: false
+
+      - id: check-terraform-naming
+        name: Check Terraform Naming Conventions
+        entry: scripts/check-terraform-naming.sh
+        language: script
+        files: \.tf\.liquid$
+        pass_filenames: false
+
+      - id: coverage-gate
+        name: Coverage Gate
+        entry: tools/coverage-gate
+        args: ['run', '--mode=local', '--staged-only']
+        language: script
+        pass_filenames: false
+        stages: [pre-commit]
+        always_run: false

@@ -1,0 +1,149 @@
+name: Security Scanning
+run-name: "[🔒 Security | SEC-${{ github.run_number }}] ${{ github.event.pull_request.title || github.event.head_commit.message }}"
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'refactor/**'
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+  schedule:
+    # Run weekly on Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+
+permissions:
+  security-events: write
+
+jobs:
+  tfsec:
+    name: Terraform Security Scan (tfsec)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for rendered .tf files
+        id: check-tf
+        run: |
+          if find . -name "*.tf" -not -name "*.liquid" -not -path "./.terraform/*" -not -path "./.git/*" | grep -q .; then
+            echo "has_tf_files=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_tf_files=false" >> $GITHUB_OUTPUT
+            echo "⚠️  No rendered .tf files found (only .liquid templates). Skipping tfsec."
+          fi
+
+      - name: Run tfsec
+        if: steps.check-tf.outputs.has_tf_files == 'true'
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          soft_fail: false
+          format: sarif
+          additional_args: --minimum-severity MEDIUM
+        continue-on-error: true
+
+      - name: Upload tfsec results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && steps.check-tf.outputs.has_tf_files == 'true' && hashFiles('results.sarif') != ''
+        with:
+          sarif_file: results.sarif
+        continue-on-error: true
+
+  checkov:
+    name: Infrastructure Security Scan (Checkov)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: '3.11'
+
+      - name: Install Checkov
+        run: pip install checkov==3.1.34
+
+      - name: Run Checkov
+        id: checkov
+        run: |
+          checkov --directory . \
+            --framework terraform \
+            --output cli \
+            --output sarif \
+            --output-file-path console,results.sarif \
+            --soft-fail || true
+
+      - name: Upload Checkov results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('results.sarif') != ''
+        with:
+          sarif_file: results.sarif
+        continue-on-error: true
+
+  trivy:
+    name: Container & IaC Security Scan (Trivy)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          scan-type: 'config'
+          hide-progress: false
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '0'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('trivy-results.sarif') != ''
+        with:
+          sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
+
+  security-summary:
+    name: Security Scan Summary
+    runs-on: ubuntu-latest
+    needs:
+      - tfsec
+      - checkov
+      - trivy
+    if: always()
+
+    steps:
+      - name: Create security summary
+        run: |
+          echo "## Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.tfsec.result }}" == "success" ]; then
+            echo "✅ tfsec: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ tfsec: Issues found (check Security tab)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.checkov.result }}" == "success" ]; then
+            echo "✅ Checkov: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Checkov: Issues found (check Security tab)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.trivy.result }}" == "success" ]; then
+            echo "✅ Trivy: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Trivy: Issues found (check Security tab)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔒 View detailed security findings in the **Security** tab" >> $GITHUB_STEP_SUMMARY

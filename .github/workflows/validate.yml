@@ -1,0 +1,207 @@
+name: Validate Infrastructure Code
+run-name: "[✅ Validate | VAL-${{ github.run_number }}] ${{ github.event.pull_request.title || github.event.head_commit.message }}"
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'refactor/**'
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  terraform-validate:
+    name: Terraform Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.7
+
+      - name: Terraform Format Check
+        id: fmt
+        run: terraform fmt -check -recursive -diff
+        continue-on-error: true
+
+      - name: Terraform Format Results
+        if: steps.fmt.outcome == 'failure'
+        run: |
+          echo "::error::Terraform formatting check failed. Run 'terraform fmt -recursive' to fix."
+          exit 1
+
+      - name: Check for .tf files (not .liquid)
+        id: check-tf
+        run: |
+          if find . -name "*.tf" -not -name "*.liquid" -not -path "./.terraform/*" -not -path "./.git/*" | grep -q .; then
+            echo "has_tf_files=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_tf_files=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No rendered .tf files found (only .liquid templates). Skipping terraform validate."
+          fi
+
+      - name: Terraform Init (Backend=false)
+        if: steps.check-tf.outputs.has_tf_files == 'true'
+        run: |
+          for dir in $(find . -name "main.tf" -not -path "./.terraform/*" -exec dirname {} \;); do
+            echo "Initializing $dir..."
+            (cd "$dir" && terraform init -backend=false) || true
+          done
+
+      - name: Terraform Validate
+        if: steps.check-tf.outputs.has_tf_files == 'true'
+        run: |
+          for dir in $(find . -name "main.tf" -not -path "./.terraform/*" -exec dirname {} \;); do
+            echo "Validating $dir..."
+            (cd "$dir" && terraform validate) || exit 1
+          done
+
+  ansible-lint:
+    name: Ansible Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: '3.11'
+
+      - name: Install Ansible and ansible-lint
+        run: |
+          pip install ansible==9.1.0 ansible-lint==6.22.1
+
+      - name: Install Ansible Collections
+        run: |
+          ansible-galaxy collection install community.general --force
+
+      - name: Run ansible-lint
+        run: |
+          if [ -d "aws/ansible" ]; then
+            ansible-lint aws/ansible/playbooks/ aws/ansible/roles/ || exit 1
+          else
+            echo "No Ansible files found, skipping."
+          fi
+
+  yaml-lint:
+    name: YAML Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: '3.11'
+
+      - name: Install yamllint
+        run: pip install yamllint==1.33.0
+
+      - name: Run yamllint
+        run: yamllint -c .yamllint.yml .
+
+  liquid-template-validation:
+    name: Liquid Template Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Liquid template validation
+        run: ./scripts/validate-liquid-templates.sh
+
+  terraform-naming-check:
+    name: Terraform Naming Conventions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Terraform naming conventions
+        run: ./scripts/check-terraform-naming.sh
+
+  shellcheck:
+    name: Shell Script Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          severity: warning
+          scandir: './scripts'
+
+  markdown-lint:
+    name: Markdown Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run markdownlint
+        uses: articulate/actions-markdownlint@v1
+        with:
+          config: .markdownlint.json
+          files: '**/*.md'
+          ignore: node_modules
+
+  validation-summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    needs:
+      - terraform-validate
+      - ansible-lint
+      - yaml-lint
+      - liquid-template-validation
+      - terraform-naming-check
+      - shellcheck
+      - markdown-lint
+    if: always()
+
+    steps:
+      - name: Check validation results
+        run: |
+          echo "## Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All validation checks completed" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.terraform-validate.result }}" != "success" ]; then
+            echo "❌ Terraform validation failed" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          if [ "${{ needs.ansible-lint.result }}" != "success" ]; then
+            echo "❌ Ansible linting failed" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          if [ "${{ needs.yaml-lint.result }}" != "success" ]; then
+            echo "❌ YAML linting failed" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          if [ "${{ needs.liquid-template-validation.result }}" != "success" ]; then
+            echo "❌ Liquid template validation failed" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All validation checks passed! ✨" >> $GITHUB_STEP_SUMMARY

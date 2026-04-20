@@ -17,7 +17,7 @@ resource "aws_security_group" "ingress" {
     protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
   }
-  
+
   egress {
     protocol         = "-1"
     from_port        = 0
@@ -25,13 +25,13 @@ resource "aws_security_group" "ingress" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
-  
+
   tags = {
     Name             = "${var.name}-${var.environment}-ingress-sg"
     "product"        = var.name
     "environment"    = var.environment
     "role"           = "networking"
-    "terraform"      = "true"    
+    "terraform"      = "true"
   }
 }
 
@@ -39,7 +39,7 @@ output "ingress" {
   value = aws_security_group.ingress.id
 }
 
-resource "aws_security_group" "backend-ingress" {
+resource "aws_security_group" "backend_ingress" {
   name   = "${var.name}-${var.environment}-backend-ingress-sg"
   vpc_id = var.vpc_id
 
@@ -50,16 +50,16 @@ resource "aws_security_group" "backend-ingress" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
-  
+
   tags = {
     Name             = "${var.name}-${var.environment}-backend-ingress-sg"
     "product"        = var.name
     "environment"    = var.environment
     "role"           = "networking"
-    "terraform"      = "true"    
+    "terraform"      = "true"
   }
 }
 
-output "backend-ingress" {
-  value = aws_security_group.backend-ingress.id
+output "backend_ingress" {
+  value = aws_security_group.backend_ingress.id
 }
